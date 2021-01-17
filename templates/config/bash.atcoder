@@ -1,0 +1,12 @@
+# vi:se ft=sh :
+# Place this file at ~/.atcoder and edit to fit to your environment.
+SOURCETMPL="Main.sh"
+SOURCEFILE="Main.sh"
+LANGTITLE="Bash"
+LANGUAGEID=4007 #bash
+atcoder_build() {
+	true
+}
+atcoder_run() {
+	exec bash "${SOURCEFILE}"
+}

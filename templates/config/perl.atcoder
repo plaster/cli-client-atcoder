@@ -1,0 +1,12 @@
+# vi:se ft=sh :
+# Place this file at ~/.atcoder and edit to fit to your environment.
+SOURCETMPL="Main.pl"
+SOURCEFILE="Main.pl"
+LANGTITLE="Perl"
+LANGUAGEID=4042 #Perl
+atcoder_build() {
+	perl -W -c "${SOURCEFILE}"
+}
+atcoder_run() {
+	exec perl -X "${SOURCEFILE}"
+}
