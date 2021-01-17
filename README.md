@@ -1,5 +1,16 @@
 # cli-atcoder
-atcoder cli client
+AtCoderのコマンドラインクライアントです。
+
+## インストール
+
+`PATH` の通ったところに `bin/cca` を好きな名前で置いてください。
+
+## 要求
+
+- curl
+- bash
+
+## 使い方
 
 ```
 % cca help
