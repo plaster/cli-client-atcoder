@@ -1,0 +1,538 @@
+#!/bin/bash
+
+# global parameters
+COOKIE_JAR=~/.atcoder-cookie
+URIBASE=https://atcoder.jp
+CURLCMD=(
+		curl -sS
+		-b "$COOKIE_JAR"
+		-c "$COOKIE_JAR"
+)
+
+# custom parameters
+declare -f atcoder_build
+declare -f atcoder_run
+declare SOURCETMPL
+declare SOURCEFILE
+declare LANGUAGEID
+declare -f atcoder_assert_tmplroot
+declare TMPLROOT
+
+atcoder_assert_config() {
+	type -t atcoder_build >/dev/null || exitm "config missing: atcoder_build"
+	type -t atcoder_run >/dev/null || exitm "config missing: atcoder_run"
+	[ -v SOURCETMPL ] || exitm "config missing: SOURCETMPL"
+	[ -v SOURCEFILE ] || exitm "config missing: SOURCEFILE"
+	[ -v LANGUAGEID ] || exitm "config missing: LANGUAGEID"
+	[ -v LANGTITLE ] || exitm "config missing: LANGTITLE"
+}
+
+atcoder_load_config() {
+	[ ! -x ~/.atcoder ] || . ~/.atcoder
+	[ ! -x ./.atcoder ] || . ./.atcoder
+}
+
+# common functions
+exitm() {
+	echo 1>&2 "ABORT: $@"
+	exit 1
+}
+m() {
+	echo 1>&2 "INFO: $@"
+}
+
+# http wrapper
+atcoder_http_get() {
+	local URIPATH="$1"
+	shift
+	"${CURLCMD[@]}" "${URIBASE}${URIPATH}" "$@"
+}
+atcoder_http_post() {
+	local URIPATH="$1"
+	shift
+	"${CURLCMD[@]}" -XPOST "${URIBASE}${URIPATH}" "$@"
+}
+
+atcoder_extract_js_var() {
+	local VARNAME VALUE
+	VARNAME="$1"
+	[ "X$VARNAME" != X ] || exitm "INTERNAL ERROR: VARNAME MISSING"
+	sed -ne "/var $VARNAME = \"/ { s/.*var $VARNAME = \"//; s/\".*//; p; Q }" <<< "$CONTENT"
+}
+
+atcoder_check_logged_in() {
+	local CONTENT USER_SCREEN_NAME
+	CONTENT="$(atcoder_http_get /home)" || exitm "failed to get /home"
+	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
+	if [ "X$USER_SCREEN_NAME" = X ]
+	then m "not logged in."
+		return 1
+	else m "logged in as: $USER_SCREEN_NAME"
+		return 0
+	fi
+}
+
+atcoder_do_login() {
+	local CONTENT CSRF_TOKEN USER_SCREEN_NAME
+	CONTENT="$(atcoder_http_get /login)" || exitm "failed to get /login"
+	CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
+	[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
+	# m "csrf_token: $CSRF_TOKEN"
+	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
+	if [ "X$USER_SCREEN_NAME" = X ]
+	then m "not logged in."
+	else m "logged in as: $USER_SCREEN_NAME"
+		return 0
+	fi
+
+	echo 1>&2 -n "user: "
+	read USER_SCREEN_NAME || exitm "Cancelled."
+
+	local PASSWORD
+	echo 1>&2 -n "pass: "
+	read -s PASSWORD || exitm "Cancelled."
+
+	m "login..."
+	local STATUS
+	STATUS="$(atcoder_http_post /login \
+		-F "username=$USER_SCREEN_NAME" \
+		-F "password=$PASSWORD" \
+		-F "csrf_token=$CSRF_TOKEN" \
+		-o /dev/null -w '%{http_code}\n'
+		)" ||
+		exitm "failed to post /login"
+	case "$STATUS" in
+	302) ;;
+	*)   exitm "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
+	esac
+
+
+	atcoder_check_logged_in
+	case "$?" in
+	0)
+		m "login ok."
+		return 0
+		;;
+	*)
+		m "login failed."
+		return 1
+		;;
+	esac
+}
+
+atcoder_do_logout() {
+	local CONTENT CSRF_TOKEN USER_SCREEN_NAME
+	CONTENT="$(atcoder_http_get /login)" || exitm "failed to get /login"
+	CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
+	[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
+	# m "csrf_token: $CSRF_TOKEN"
+	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
+	if [ "X$USER_SCREEN_NAME" = X ]
+	then m "not logged in."
+		return 0
+	else m "logged in as: $USER_SCREEN_NAME"
+	fi
+
+	m "logout..."
+	local STATUS
+	STATUS="$(atcoder_http_post /logout \
+		-F "csrf_token=$CSRF_TOKEN" \
+		-o /dev/null -w '%{http_code}\n'
+		)" ||
+		exitm "failed to post /logout"
+	case "$STATUS" in
+	302) ;;
+	*)   exitm "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
+	esac
+
+	atcoder_check_logged_in
+	case "$?" in
+	1)
+		m "logout ok."
+		return 0
+		;;
+	*)
+		m "logout failed."
+		return 1
+		;;
+	esac
+}
+
+atcoder_detect_by_dir() {
+	case "$1" in
+	CONTEST) sed -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\1@; p }' ;;
+	PROBLEM) sed -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\2@; p }' ;;
+	*) exitm "INTERNAL ERROR: unknown: $1" ;;
+	esac
+}
+
+atcoder_detect_by_pwd() {
+	pwd | atcoder_detect_by_dir "$@"
+}
+
+declare CONTEST
+declare PROBLEM
+atcoder_assert_pwd() {
+	CONTEST="$(atcoder_detect_by_pwd CONTEST)"
+	PROBLEM="$(atcoder_detect_by_pwd PROBLEM)"
+	[ "X$CONTEST" != X ] || exitm "failed to detect CONTEST"
+	[ "X$PROBLEM" != X ] || exitm "failed to detect PROBLEM"
+	m CONTEST: $CONTEST
+	m PROBLEM: $PROBLEM
+}
+
+atcoder_extract_task_screen_names() {
+	sed -ne '
+		/<select.*name="data.TaskScreenName">/,$ {
+			/<\/select>/Q
+			/<option/ {
+				s/.*value="//
+				s/".*//
+				p
+			}
+		}
+	' <<< "$CONTENT"
+}
+
+atcoder_do_mkdir() {
+	local mode="$1"
+	CONTEST="$(basename $(pwd))"
+	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
+	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
+	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
+	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG: task list empty."
+	local TASKDIR
+	while read TASK_SCREEN_NAME
+	do
+		case "$mode" in
+		'FULLNAME')
+			TASKDIR="$TASK_SCREEN_NAME"
+			;;
+		'SHORTNAME')
+			TASKDIR="$(sed -e 's/.*_//' <<< "$TASK_SCREEN_NAME")"
+			;;
+		'')
+			exitm "internal error: mode missing." ;;
+		*)
+			exitm "internal error: unknown mode: $mode" ;;
+		esac
+
+		if [ -d "$TASKDIR" ]
+		then
+			m "mkdir $TASKDIR for $TASK_SCREEN_NAME is already done"
+		else
+			m "mkdir $TASKDIR for $TASK_SCREEN_NAME now"
+			mkdir "$TASKDIR" || exitm "failed to mkdir $TASKDIR"
+		fi
+	done <<< "$TASK_SCREEN_NAMES"
+}
+
+atcoder_task() {
+	local SUBCOMMAND="$1"
+
+	atcoder_assert_config
+	atcoder_assert_pwd
+
+	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
+	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
+	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
+	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG: task list empty."
+	TASK_SCREEN_NAME="$(
+		grep "\<$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES" ||
+		grep "_$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES"
+	)"
+	[ "X$TASK_SCREEN_NAME" != X ] || exitm "failed to determinate TASK_SCREEN_NAME"
+	m TASK_SCREEN_NAME: $TASK_SCREEN_NAME
+
+	case "$SUBCOMMAND" in
+	fetch)
+		local TASKPATH="/contests/${CONTEST}/tasks/${TASK_SCREEN_NAME}"
+		CONTENT="$(atcoder_http_get "$TASKPATH")" || exitm "failed to get $TASKPATH"
+
+		[ -d sample ] || mkdir sample || exitm "failed to mkdir sample"
+		local SAMPLENO=1
+		while grep -q "Sample Input $SAMPLENO" <<< "$CONTENT"
+		do
+			m found sample $SAMPLENO
+			sed -ne '\@<h3>Sample Input '$SAMPLENO'</h3><pre>@,$ {
+				\@</pre>@ Q
+				s/.*<pre>//
+				s/\r$//
+				p
+			}' <<< $CONTENT > sample/$SAMPLENO.in
+			sed -ne '\@<h3>Sample Output '$SAMPLENO'</h3><pre>@,$ {
+				\@</pre>@ Q
+				s/.*<pre>//
+				s/\r$//
+				p
+			}' <<< $CONTENT > sample/$SAMPLENO.out
+			SAMPLENO=$(( SAMPLENO + 1 ))
+		done
+		;;
+
+	submit)
+		local CSRF_TOKEN USER_SCREEN_NAME
+		CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
+		[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
+		USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
+		[ "X$USER_SCREEN_NAME" != X ] || exitm "login first"
+		[ -e "${SOURCEFILE}" ] || exitm "no source"
+
+		m "submitting $SOURCEFILE as $LANGTITLE ..."
+		local STATUS
+		STATUS="$(atcoder_http_post "/contests/${CONTEST}/submit" \
+			--data-urlencode "data.LanguageId=${LANGUAGEID}" \
+			--data-urlencode "data.TaskScreenName=${TASK_SCREEN_NAME}" \
+			--data-urlencode "sourceCode=$(cat "${SOURCEFILE}")" \
+			--data-urlencode "csrf_token=$CSRF_TOKEN" \
+			-o /dev/null -w '%{http_code}\n'
+			)" ||
+			exitm "submit failed."
+		case "$STATUS" in
+		302) ;;
+		*)   exitm "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
+		esac
+		;;
+	*)
+		exitm "INTERNAL ERROR: unknown: $SUBCOMMAND"
+		;;
+	esac
+}
+
+atcoder_do_fetch() {
+	atcoder_task fetch
+}
+
+checked_cp() {
+	local CPFROM="$1"
+	local CPTO="$2"
+
+	[ -f "${CPFROM}" ] || exitm "cannoct access to template: $CPFROM"
+
+	m cp "$CPFROM" "$CPTO"
+	cp "$CPFROM" "$CPTO" || exitm "cp faield."
+}
+
+checked_cp_i() {
+	local CPFROM="$1"
+	local CPTO="$2"
+
+	[ -f "${CPFROM}" ] || exitm "cannoct access to template: $CPFROM"
+
+	# `cp -i` don't fail even if overwrite cancelled interactively.
+	if [ -e "$CPTO" ]
+	then
+		echo 1>&2 -n "$CPTO already exists. Overwrite? [y/N]"
+		read C
+		RC="$?"
+		case "$RC" in
+		0)
+			;;
+		*)
+			exitm "Cancelled."
+			;;
+		esac
+		case "$C" in
+		Y|y)
+			;;
+		*)
+			exitm "Cancelled."
+			;;
+		esac
+	fi
+
+	m cp "$CPFROM" "$CPTO"
+	cp "$CPFROM" "$CPTO" || exitm "cp faield."
+}
+
+atcoder_assert_tmplroot() {
+	local RC WORKROOT
+	WORKROOT="$(git rev-parse --show-toplevel)"
+	RC="$?"
+	case "$RC" in
+	0) ;;
+	*) exitm "Failed to detect WORKROOT($RC). Please check if git repo is properly checked out." ;;
+	esac
+	TMPLROOT="${WORKROOT}/templates"
+}
+
+atcoder_do_init() {
+	local ATCODER_LANG="$1"
+	[ "X${ATCODER_LANG}" = X ] || atcoder_do_switch "$ATCODER_LANG"
+
+	atcoder_assert_pwd
+	atcoder_assert_config
+	atcoder_assert_tmplroot
+
+	checked_cp_i "${TMPLROOT}/source/${SOURCETMPL}" "./${SOURCEFILE}"
+}
+
+atcoder_do_switch() {
+	local ATCODER_LANG="$1"
+	[ "X${ATCODER_LANG}" != X ] || exitm "language is not specified."
+	atcoder_assert_pwd
+	atcoder_load_config
+	atcoder_assert_tmplroot
+
+	case "$ATCODER_LANG" in
+	default)
+		[ ! -e ./.atcoder ] || rm ./.atcoder || exitm "failed to rm ./.atcoder"
+		;;
+	*)
+		checked_cp "${TMPLROOT}/config/${ATCODER_LANG}.atcoder" ./.atcoder
+		chmod u+x ./.atcoder || exitm "failed to chmod ./.atcoder"
+		;;
+	esac
+
+	atcoder_load_config
+	atcoder_assert_config
+}
+
+atcoder_do_test() {
+	atcoder_assert_config
+	[ -d sample ] || {
+		m "fetching first."
+		atcoder_do_fetch
+	}
+	atcoder_build || exitm "build faield."
+	m "running $SOURCEFILE on $LANGTITLE ..."
+	local SAMPLE_IN SAMPLE_OUT RUN_OUT RC
+	RC=0
+	while read SAMPLE_IN
+	do
+		SAMPLE_OUT="${SAMPLE_IN%.in}.out"
+		m "atcoder_run < ${SAMPLE_IN}"
+		RUN_OUT="$(atcoder_run < "${SAMPLE_IN}")" || exitm "atcoder_run failed!"
+		if diff -U0 -L expected -L got "$SAMPLE_OUT" <(echo "$RUN_OUT")
+		then
+			m OK
+		else
+			m NG
+			RC=1
+		fi
+	done < <(find sample -name '*.in' | sort -n)
+	return "$RC"
+}
+
+atcoder_do_submit() {
+	atcoder_task submit
+}
+
+declare MAINCOMMAND
+
+show_help() {
+	echo "$0 <サブコマンド> [引数...] - AtCoder 提出クライアント"
+	cat <<-'EOF'
+	以下のサブコマンドが利用可能です。
+	EOF
+	local MAINCOMMANDNAME="${MAINCOMMAND##*/}"
+	local SEDARGS=(
+		-n
+		-e " s@\$COOKIE_JAR@$COOKIE_JAR@g "
+		-e " s@\$MAINCOMMANDNAME@$MAINCOMMANDNAME@g "
+		-e '
+		/^# dispatch/,$ {
+			/^[-a-z|]\+)/ {
+				s/).*//
+				s/|\(.*\)/ (または \1)/
+				s/|/, /g
+				s/^/\n/
+				p
+			}
+			/^[ \t]*###/ {
+				s/^[ \t]*###/\t/
+				p
+			}
+		}'
+	)
+	sed "${SEDARGS[@]}" < "$MAINCOMMAND"
+}
+
+show_rights() {
+	cat <<-'EOF'
+
+	連絡先: https://github.com/plaster/
+	EOF
+}
+
+# dispatch
+atcoder_load_config
+MAINCOMMAND="$0"
+SUBCOMMAND="$1"
+shift
+case "$SUBCOMMAND" in
+check-logged-in|whoami)
+	### AtCoderへのログイン状態を表示します。
+	atcoder_check_logged_in
+	;;
+login)
+	### AtCoderへログインします。IDとパスワードの入力を要求します。
+	### ログイン状態は $COOKIE_JAR ファイルにセッションとして保持されます。
+	atcoder_do_login
+	;;
+logout)
+	### AtCoderをセッションログアウトします。
+	atcoder_do_logout
+	;;
+md)
+	### コンテストの全タスクのディレクトリを掘ります。コンテスト名(URLに表示されているもの)のディレクトリ下で実行してください。
+	### 作成されるディレクトリは a b c ... のようになります。
+	### 例) ~/work/abc188$ $MAINCOMMANDNAME md
+	atcoder_do_mkdir SHORTNAME
+	;;
+mkdir)
+	### コンテストの全タスクのディレクトリを掘ります。コンテスト名(URLに表示されているもの)のディレクトリ下で実行してください。
+	### 作成されるディレクトリは abc188_a abc188_b ... のように、各タスクのURLのものになります。
+	### タスク名の末尾がアルファベット一文字で定まらないようなコンテスト（abs等）で使います。
+	atcoder_do_mkdir FULLNAME
+	;;
+init|i|gen)
+	### 引数: [template_id]
+	### タスクディレクトリ下に回答テンプレートを生成します。タスクディレクトリ下で実行してください。
+	### 例) ~/work/abc188/a$ $MAINCOMMANDNAME init
+	### 例) ~/work/abc188/b$ $MAINCOMMANDNAME init bash
+	atcoder_do_init "$@"
+	;;
+switch)
+	### 引数: <template_id>
+	### タスクディレクトリ下の回答テンプレートを別言語に切り替えます。タスクディレクトリ下で実行してください。
+	### 例) ~/work/abc188/a$ $MAINCOMMANDNAME switch bash
+	atcoder_do_switch "$@"
+	;;
+fetch)
+	### タスクディレクトリ下にサンプル入出力をダウンロードして保存します。
+	atcoder_do_fetch
+	;;
+test|t)
+	### サンプル入力で回答を実行し、サンプル出力との結果の一致をチェックします。
+	atcoder_do_test
+	;;
+submit|sub|s)
+	### 回答を提出します。提出前にサンプル入出力と比較し、一致しない場合は中止します。
+	m "testing first."
+	if atcoder_do_test
+	then
+		m "All tests OK."
+		m "Now submit!"
+		atcoder_do_submit
+	else
+		exitm "test failed."
+	fi
+	;;
+force-submit)
+	### 回答を提出します。サンプル入出力との比較は行いません。
+	atcoder_do_submit
+	;;
+help)
+	### このヘルプを表示します。
+	show_help
+	show_rights
+	;;
+'')
+	show_help
+	exitm "SUBCOMMAND MISSING"
+	;;
+*)
+	exitm "UNKNOWN SUBCOMMAND: $SUBCOMMAND"
+	;;
+esac
