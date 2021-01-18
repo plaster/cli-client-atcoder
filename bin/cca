@@ -263,6 +263,7 @@ atcoder_task() {
 
 		[ -d sample ] || mkdir sample || exitm "failed to mkdir sample"
 		local SAMPLENO=1
+
 		while grep -q "Sample Input $SAMPLENO" <<< "$CONTENT"
 		do
 			m found sample $SAMPLENO
@@ -280,6 +281,28 @@ atcoder_task() {
 			}' <<< $CONTENT > sample/$SAMPLENO.out
 			SAMPLENO=$(( SAMPLENO + 1 ))
 		done
+
+		while grep -q "入力例 $SAMPLENO" <<< "$CONTENT"
+		do
+			m found 入力例 $SAMPLENO
+			sed -ne '\@<h3>入力例 '$SAMPLENO'</h3><pre>@,$ {
+				\@</pre>@ Q
+				s/.*<pre>//
+				s/\r$//
+				p
+			}' <<< $CONTENT > sample/$SAMPLENO.in
+			sed -ne '\@<h3>出力例 '$SAMPLENO'</h3><pre>@,$ {
+				\@</pre>@ Q
+				s/.*<pre>//
+				s/\r$//
+				p
+			}' <<< $CONTENT > sample/$SAMPLENO.out
+			SAMPLENO=$(( SAMPLENO + 1 ))
+		done
+
+		if [ "$SAMPLENO" == 1 ]; then
+			exitm 'No `入力例 #` found.'
+		fi
 		;;
 
 	submit)
