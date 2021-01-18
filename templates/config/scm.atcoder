@@ -1,0 +1,12 @@
+# vi:se ft=sh :
+# Place this file at ~/.atcoder and edit to fit to your environment.
+SOURCETMPL="Main.scm"
+SOURCEFILE="Main.scm"
+LANGTITLE="Scheme(Gauche 0.9.9)"
+LANGUAGEID=4053 #scheme
+atcoder_build() {
+	true
+}
+atcoder_run() {
+	exec gosh "${SOURCEFILE}"
+}
