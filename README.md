@@ -1,6 +1,11 @@
 # cli-client-atcoder
 AtCoderのコマンドライン提出クライアントです。
 
+## 要求
+
+- curl
+- bash
+
 ## インストール
 
 * `PATH` の通ったところに `bin/cca` を好きな名前で置いてください。
@@ -11,11 +16,6 @@ AtCoderのコマンドライン提出クライアントです。
         TMPLROOT=templatesディレクトリ場所
     }
     ```
-
-## 要求
-
-- curl
-- bash
 
 ## 使い方
 
