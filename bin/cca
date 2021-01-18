@@ -438,15 +438,36 @@ declare MAINCOMMAND
 
 show_help() {
 	echo "$0 <サブコマンド> [引数...] - AtCoder 提出クライアント"
-	cat <<-'EOF'
-	以下のサブコマンドが利用可能です。
-	EOF
+	case "$1" in
+	'')
+		echo 'サブコマンド:'
+		;;
+	d|details)
+		cat <<-'EOF'
+		以下のサブコマンドが利用可能です。
+		EOF
+		;;
+	*)  exitm "internal error: unknown mode: $mode" ;;
+	esac
 	local MAINCOMMANDNAME="${MAINCOMMAND##*/}"
 	local SEDARGS=(
 		-n
 		-e " s@\$COOKIE_JAR@$COOKIE_JAR@g "
 		-e " s@\$MAINCOMMANDNAME@$MAINCOMMANDNAME@g "
-		-e '
+	)
+	case "$1" in
+	'')
+		SEDARGS+=( -e '
+		/^# dispatch/,$ {
+			/^[-a-z|]\+)/ {
+				s/).*//
+				s/|.*//
+				s/^/\t/
+				p
+			}
+		}' ) ;;
+	d)
+		SEDARGS+=( -e '
 		/^# dispatch/,$ {
 			/^[-a-z|]\+)/ {
 				s/).*//
@@ -454,21 +475,32 @@ show_help() {
 				s/|/, /g
 				p
 			}
-		}'
-	)
-	case "$1" in
+		}' ) ;;
 	details)
-		SEDARGS+=(
-		-e '
+		SEDARGS+=( -e '
 		/^# dispatch/,$ {
-			/^[ \t]*###/ {
-				s/^[ \t]*###/\t/
+			/^[-a-z|]\+)/ {
+				s/).*//
+				s/|\(.*\)/ (または \1)/
+				s/|/, /g
+				s/^/\n/
 				p
 			}
-		}'
-		)
-		;;
+		}' ) ;;
+	*)  exitm "internal error: unknown mode: $mode" ;;
+	esac
+
+	case "$1" in
 	'') ;;
+	details|d)
+		SEDARGS+=( -e '
+			/^# dispatch/,$ {
+				/^[ \t]*###/ {
+					s/^[ \t]*###/\t/
+					p
+				}
+			}' )
+		;;
 	*)  exitm "internal error: unknown mode: $mode" ;;
 	esac
 	sed "${SEDARGS[@]}" < "$MAINCOMMAND"
@@ -559,7 +591,7 @@ force-submit)
 	;;
 help)
 	### このヘルプを表示します。
-	show_help details
+	show_help d
 	show_rights
 	;;
 '')
