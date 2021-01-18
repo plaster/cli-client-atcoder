@@ -17,6 +17,7 @@ declare SOURCEFILE
 declare LANGUAGEID
 declare -f atcoder_assert_tmplroot
 declare TMPLROOT
+declare -f atcoder_edit
 
 atcoder_assert_config() {
 	type -t atcoder_build >/dev/null || exitm "config missing: atcoder_build"
@@ -25,6 +26,11 @@ atcoder_assert_config() {
 	[ -v SOURCEFILE ] || exitm "config missing: SOURCEFILE"
 	[ -v LANGUAGEID ] || exitm "config missing: LANGUAGEID"
 	[ -v LANGTITLE ] || exitm "config missing: LANGTITLE"
+}
+
+atcoder_assert_edit() {
+	type -t atcoder_edit >/dev/null || exitm "config missing: atcoder_edit"
+	atcoder_assert_config
 }
 
 atcoder_load_config() {
@@ -227,6 +233,12 @@ atcoder_do_mkdir() {
 	done <<< "$TASK_SCREEN_NAMES"
 }
 
+atcoder_do_edit() {
+	atcoder_assert_config
+	atcoder_assert_pwd
+	atcoder_edit "$SOURCEFILE"
+}
+
 atcoder_task() {
 	local SUBCOMMAND="$1"
 
@@ -354,6 +366,10 @@ atcoder_assert_tmplroot() {
 	*) exitm "Failed to detect WORKROOT($RC). Please check if git repo is properly checked out." ;;
 	esac
 	TMPLROOT="${WORKROOT}/templates"
+}
+
+atcoder_edit() {
+	"$EDITOR" "$@"
 }
 
 atcoder_do_init() {
@@ -500,6 +516,12 @@ switch)
 	### タスクディレクトリ下の回答テンプレートを別言語に切り替えます。タスクディレクトリ下で実行してください。
 	### 例) ~/work/abc188/a$ $MAINCOMMANDNAME switch bash
 	atcoder_do_switch "$@"
+	;;
+edit|e)
+	### エディタを起動して回答を編集します。タスクディレクトリ下で実行してください。
+	### デフォルトでは EDITOR 環境変数が使われます。
+	### 設定ファイルで atcoder_edit() シェル関数を定義してカスタマイズできます。
+	atcoder_do_edit
 	;;
 fetch)
 	### タスクディレクトリ下にサンプル入出力をダウンロードして保存します。
