@@ -202,12 +202,22 @@ atcoder_extract_task_screen_names() {
 }
 
 atcoder_do_mkdir() {
-	local mode="$1"
-	CONTEST="$(basename $(pwd))"
+	local mode="$2"
+	CONTEST="$1"
+	local PWDOLD=""
+	if [ "$CONTEST" == '' ]; then
+		PWDOLD="$(pwd)"
+		CONTEST="$(basename "$PWDOLD")"
+		cd ..
+	fi
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
 	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
 	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG: task list empty."
+
+	[ -d "$CONTEST" ] || {
+		mkdir "$CONTEST" && m "mkdir $CONTEST for contest $CONTEST now"
+	} || exitm "failed to mkdir $CONTEST"
 	local TASKDIR
 	while read TASK_SCREEN_NAME
 	do
@@ -229,9 +239,11 @@ atcoder_do_mkdir() {
 			m "mkdir $TASKDIR for $TASK_SCREEN_NAME is already done"
 		else
 			m "mkdir $TASKDIR for $TASK_SCREEN_NAME now"
-			mkdir "$TASKDIR" || exitm "failed to mkdir $TASKDIR"
+			mkdir "$CONTEST/$TASKDIR" || exitm "failed to mkdir $CONTEST/$TASKDIR"
 		fi
 	done <<< "$TASK_SCREEN_NAMES"
+
+	[ "$PWDOLD" = "" ] || cd "$PWDOLD"
 }
 
 atcoder_do_edit() {
@@ -559,19 +571,22 @@ logout)
 	### AtCoderをセッションログアウトします。
 	atcoder_do_logout
 	;;
-md)
+md|new)
+	### 引数: [contest]
 	### コンテストの全タスクのディレクトリを掘ります。
-	### コンテスト名(URLに表示されているもの)のディレクトリ下で実行してください。
+	### 引数にコンテスト名(URLに表示されているもの)を指定した場合、コンテスト名のディレクトリを作成し
+	### 各タスクのディレクトリはその中に作成されます。
+	### コンテスト名(URLに表示されているもの)のディレクトリ下で実行した場合、
+	### 各タスクのディレクトリはカレントディレクトリに作成されます。
 	### 作成されるディレクトリは a b c ... のようになります。
 	### 例) ~/work/abc188$ $MAINCOMMANDNAME md
-	atcoder_do_mkdir SHORTNAME
+	atcoder_do_mkdir "$1" SHORTNAME
 	;;
 mkdir)
-	### コンテストの全タスクのディレクトリを掘ります。
-	### コンテスト名(URLに表示されているもの)のディレクトリ下で実行してください。
-	### 作成されるディレクトリは abc188_a abc188_b ... のように、各タスクのURLのものになります。
+	### md サブコマンドと同様ですが
+	### 各タスクのディレクトリ名は abc188_a abc188_b ... のようにURLのものになります。
 	### タスク名の末尾がアルファベット一文字で定まらないようなコンテスト（abs等）で使います。
-	atcoder_do_mkdir FULLNAME
+	atcoder_do_mkdir "$1" FULLNAME
 	;;
 init|i|gen)
 	### 引数: [template_id]
