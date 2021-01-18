@@ -452,15 +452,25 @@ show_help() {
 				s/).*//
 				s/|\(.*\)/ (または \1)/
 				s/|/, /g
-				s/^/\n/
 				p
 			}
+		}'
+	)
+	case "$1" in
+	details)
+		SEDARGS+=(
+		-e '
+		/^# dispatch/,$ {
 			/^[ \t]*###/ {
 				s/^[ \t]*###/\t/
 				p
 			}
 		}'
-	)
+		)
+		;;
+	'') ;;
+	*)  exitm "internal error: unknown mode: $mode" ;;
+	esac
 	sed "${SEDARGS[@]}" < "$MAINCOMMAND"
 }
 
@@ -549,7 +559,7 @@ force-submit)
 	;;
 help)
 	### このヘルプを表示します。
-	show_help
+	show_help details
 	show_rights
 	;;
 '')
