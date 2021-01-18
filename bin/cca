@@ -234,7 +234,7 @@ atcoder_do_mkdir() {
 			exitm "internal error: unknown mode: $mode" ;;
 		esac
 
-		if [ -d "$TASKDIR" ]
+		if [ -d "$CONTEST/$TASKDIR" ]
 		then
 			m "mkdir $TASKDIR for $TASK_SCREEN_NAME is already done"
 		else
