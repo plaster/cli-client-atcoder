@@ -548,7 +548,7 @@ show_help() {
 show_rights() {
 	cat <<-'EOF'
 
-	連絡先: https://github.com/plaster/cli-atcoder
+	連絡先: https://github.com/plaster/cli-client-atcoder
 	EOF
 }
 
