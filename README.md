@@ -81,5 +81,5 @@ force-submit
 help
 	 このヘルプを表示します。
 
-連絡先: https://github.com/plaster/cli-atcoder
+連絡先: https://github.com/plaster/cli-client-atcoder
 ```
