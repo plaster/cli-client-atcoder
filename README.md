@@ -1,4 +1,4 @@
-# cli-atcoder
+# cli-client-atcoder
 AtCoderのコマンドライン提出クライアントです。
 
 ## インストール
