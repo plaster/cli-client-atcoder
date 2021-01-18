@@ -460,6 +460,7 @@ show_help() {
 		SEDARGS+=( -e '
 		/^# dispatch/,$ {
 			/^[-a-z|]\+)/ {
+				/<UNDOCUMENTED>/d
 				s/).*//
 				s/|.*//
 				s/^/\t/
@@ -470,6 +471,7 @@ show_help() {
 		SEDARGS+=( -e '
 		/^# dispatch/,$ {
 			/^[-a-z|]\+)/ {
+				/<UNDOCUMENTED>/d
 				s/).*//
 				s/|\(.*\)/ (または \1)/
 				s/|/, /g
@@ -480,6 +482,7 @@ show_help() {
 		SEDARGS+=( -e '
 		/^# dispatch/,$ {
 			/^[-a-z|]\+)/ {
+				/<UNDOCUMENTED>/d
 				s/).*//
 				s/|\(.*\)/ (または \1)/
 				s/|/, /g
@@ -592,6 +595,14 @@ force-submit)
 help)
 	### このヘルプを表示します。
 	show_help d
+	show_rights
+	;;
+help-densely) #<UNDOCUMENTED>
+	show_help d
+	show_rights
+	;;
+help-sparsely) #<UNDOCUMENTED>
+	show_help details
 	show_rights
 	;;
 '')
