@@ -5,10 +5,10 @@ AtCoderのコマンドライン提出クライアントです。
 
 * `PATH` の通ったところに `bin/cca` を好きな名前で置いてください。
 * 回答を git 管理し、直下に `templates` ディレクトリをコピーしてください。
-  * または `~/.atcoder` に以下を記述してください。
+  * または `~/.cli-client-atcoder` に以下を記述してください。
     ```
     atcoder_assert_tmplroot() {
-    TMPLROOT=templatesディレクトリ場所
+        TMPLROOT=templatesディレクトリ場所
     }
     ```
 

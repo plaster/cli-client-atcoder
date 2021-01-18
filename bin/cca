@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # global parameters
-COOKIE_JAR=~/.atcoder-cookie
+COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
 CURLCMD=(
 		curl -sS
@@ -34,7 +34,7 @@ atcoder_assert_edit() {
 }
 
 atcoder_load_config() {
-	[ ! -x ~/.atcoder ] || . ~/.atcoder
+	[ ! -x ~/.cli-client-atcoder ] || . ~/.cli-client-atcoder
 	[ ! -x ./.atcoder ] || . ./.atcoder
 }
 
