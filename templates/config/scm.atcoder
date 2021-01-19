@@ -10,3 +10,7 @@ atcoder_build() {
 atcoder_run() {
 	exec gosh "${SOURCEFILE}"
 }
+atcoder_repl() {
+	m gosh -l "./${SOURCEFILE}"
+	exec gosh -l "./${SOURCEFILE}"
+}

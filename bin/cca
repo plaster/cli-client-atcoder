@@ -19,6 +19,7 @@ declare LANGUAGEID
 declare -f atcoder_assert_tmplroot
 declare TMPLROOT
 declare -f atcoder_edit
+declare -f atcoder_repl
 
 atcoder_assert_config() {
 	type -t atcoder_build >/dev/null || exitm "config missing: atcoder_build"
@@ -466,6 +467,11 @@ atcoder_do_test() {
 	return "$RC"
 }
 
+atcoder_do_repl() {
+	type -t atcoder_repl >/dev/null || exitm "config missing: atcoder_repl"
+	atcoder_repl
+}
+
 atcoder_do_submit() {
 	atcoder_task submit
 }
@@ -631,6 +637,10 @@ submit|sub|s)
 force-submit)
 	### 回答を提出します。サンプル入出力との比較は行いません。
 	atcoder_do_submit
+	;;
+repl)
+	### 回答コードをロードした状態で処理系と対話します。
+	atcoder_do_repl
 	;;
 help)
 	### このヘルプを表示します。
