@@ -16,6 +16,10 @@ AtCoderのコマンドライン提出クライアントです。
         TMPLROOT=templatesディレクトリ場所
     }
     ```
+  * この場合、実行ビットを立てておいてください。 
+    ```
+    % chmod u+x ~/.cli-client-atcoder
+    ```
 
 ## 使い方
 
