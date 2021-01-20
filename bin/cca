@@ -253,6 +253,22 @@ atcoder_do_edit() {
 	atcoder_edit "$SOURCEFILE"
 }
 
+atcoder_extract_pre() {
+	local HEADER_PAT="$1"
+	sed -ne '\@'"$HEADER_PAT"'@,$ {
+		/<pre>/,$ {
+			/<pre>/ {
+				s/.*<pre>//
+				s/\r$//
+				/^$/n
+			}
+			s/\r$//
+			\@</pre>@ Q
+			p
+		}
+	}' -e '$ { Q 1 }'
+}
+
 atcoder_task() {
 	local SUBCOMMAND="$1"
 
@@ -276,46 +292,45 @@ atcoder_task() {
 		CONTENT="$(atcoder_http_get "$TASKPATH")" || exitm "failed to get $TASKPATH"
 
 		[ -d sample ] || mkdir sample || exitm "failed to mkdir sample"
+		local header_pat HEADER_PAT
 		local SAMPLENO=1
 
-		while grep -q "Sample Input $SAMPLENO" <<< "$CONTENT"
+		while true
 		do
-			m found sample $SAMPLENO
-			sed -ne '\@<h3>Sample Input '$SAMPLENO'</h3><pre>@,$ {
-				\@</pre>@ Q
-				s/.*<pre>//
-				s/\r$//
-				p
-			}' <<< $CONTENT > sample/$SAMPLENO.in
-			sed -ne '\@<h3>Sample Output '$SAMPLENO'</h3><pre>@,$ {
-				\@</pre>@ Q
-				s/.*<pre>//
-				s/\r$//
-				p
-			}' <<< $CONTENT > sample/$SAMPLENO.out
+			header_pat="Sample Input $SAMPLENO"
+			HEADER_PAT="<h3>$header_pat</h3>"
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || break
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.in
+			m found "$header_pat"
+
+			header_pat="Sample Output $SAMPLENO"
+			HEADER_PAT="<h3>$header_pat</h3>"
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || exitm "no $header_pat found."
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.out
+			m found "$header_pat"
+
 			SAMPLENO=$(( SAMPLENO + 1 ))
 		done
 
-		while grep -q "入力例 $SAMPLENO" <<< "$CONTENT"
+		while true
 		do
-			m found 入力例 $SAMPLENO
-			sed -ne '\@<h3>入力例 '$SAMPLENO'</h3><pre>@,$ {
-				\@</pre>@ Q
-				s/.*<pre>//
-				s/\r$//
-				p
-			}' <<< $CONTENT > sample/$SAMPLENO.in
-			sed -ne '\@<h3>出力例 '$SAMPLENO'</h3><pre>@,$ {
-				\@</pre>@ Q
-				s/.*<pre>//
-				s/\r$//
-				p
-			}' <<< $CONTENT > sample/$SAMPLENO.out
+			header_pat="入力例 $SAMPLENO"
+			HEADER_PAT="<h3>$header_pat</h3>"
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || break
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.in
+			m found "$header_pat"
+
+			header_pat="出力例 $SAMPLENO"
+			HEADER_PAT="<h3>$header_pat</h3>"
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || exitm "no $header_pat found."
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.out
+			m found "$header_pat"
+
 			SAMPLENO=$(( SAMPLENO + 1 ))
 		done
 
 		if [ "$SAMPLENO" == 1 ]; then
-			exitm 'No `入力例 #` found.'
+			exitm 'No samples found.'
 		fi
 		;;
 
