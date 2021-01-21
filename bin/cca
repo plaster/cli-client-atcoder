@@ -205,20 +205,24 @@ atcoder_extract_task_screen_names() {
 atcoder_do_mkdir() {
 	local mode="$2"
 	CONTEST="$1"
-	local PWDOLD=""
+	local already_in_contest_dir
 	if [ "$CONTEST" == '' ]; then
-		PWDOLD="$(pwd)"
-		CONTEST="$(basename "$PWDOLD")"
-		cd ..
+		CONTEST="$(basename "$(pwd)")"
+		already_in_contest_dir=1
 	fi
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
 	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
-	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG: task list empty."
+	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
 
-	[ -d "$CONTEST" ] || {
-		mkdir "$CONTEST" && m "mkdir $CONTEST for contest $CONTEST now"
-	} || exitm "failed to mkdir $CONTEST"
+	if [ "$already_in_contest_dir" != 1 ]
+	then
+		[ -d "$CONTEST" ] || {
+			mkdir "$CONTEST" && m "mkdir $CONTEST for contest $CONTEST now"
+		} || exitm "failed to mkdir $CONTEST"
+		cd "$CONTEST"
+	fi
+
 	local TASKDIR
 	while read TASK_SCREEN_NAME
 	do
@@ -235,16 +239,19 @@ atcoder_do_mkdir() {
 			exitm "internal error: unknown mode: $mode" ;;
 		esac
 
-		if [ -d "$CONTEST/$TASKDIR" ]
+		if [ -d "$TASKDIR" ]
 		then
 			m "mkdir $TASKDIR for $TASK_SCREEN_NAME is already done"
 		else
 			m "mkdir $TASKDIR for $TASK_SCREEN_NAME now"
-			mkdir "$CONTEST/$TASKDIR" || exitm "failed to mkdir $CONTEST/$TASKDIR"
+			mkdir "$TASKDIR" || exitm "failed to mkdir $TASKDIR"
 		fi
 	done <<< "$TASK_SCREEN_NAMES"
-
-	[ "$PWDOLD" = "" ] || cd "$PWDOLD"
+	if [ "$already_in_contest_dir" != 1 ]
+	then
+		m "\`cd ${CONTEST}\` for eval"
+		echo "cd ${CONTEST}"
+	fi
 }
 
 atcoder_do_edit() {
@@ -278,7 +285,7 @@ atcoder_task() {
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
 	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
-	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG: task list empty."
+	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
 	TASK_SCREEN_NAME="$(
 		grep "\<$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES" ||
 		grep "_$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES"
