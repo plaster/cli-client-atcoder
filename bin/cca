@@ -257,6 +257,15 @@ atcoder_do_mkdir() {
 atcoder_do_edit() {
 	atcoder_assert_config
 	atcoder_assert_pwd
+	[ -e "${SOURCEFILE}" ] || {
+		m "no source to edit: ${SOURCEFILE} not found."
+		echo 1>&2 -n 'Hit Enter to init. > '
+		read
+		atcoder_do_init
+		m "OK"
+		echo 1>&2 -n 'Hit Enter to continue. > '
+		read
+	}
 	atcoder_edit "$SOURCEFILE"
 }
 
@@ -347,7 +356,7 @@ atcoder_task() {
 		[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
 		USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
 		[ "X$USER_SCREEN_NAME" != X ] || exitm "login first"
-		[ -e "${SOURCEFILE}" ] || exitm "no source"
+		[ -e "${SOURCEFILE}" ] || exitm "no source to submit"
 
 		m "submitting $SOURCEFILE as $LANGTITLE ..."
 		local STATUS
