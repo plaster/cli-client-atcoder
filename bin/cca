@@ -611,7 +611,7 @@ logout)
 	atcoder_do_logout
 	;;
 check-logged-in|whoami) #<UNDOCUMENTED>
-	###<UNDOCUMENTED> AtCoderへのログイン状態を表示します。
+	#<UNDOCUMENTED> AtCoderへのログイン状態を表示します。
 	atcoder_check_logged_in
 	;;
 config) #<UNDOCUMENTED>
