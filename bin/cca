@@ -494,7 +494,7 @@ atcoder_do_test() {
 			m NG
 			RC=1
 		fi
-	done < <(find sample -name '*.in' | sort -n)
+	done < <(if [ "$1" != "" ]; then echo sample/"$1".in; else find sample -name '*.in' | sort -n; fi)
 	return "$RC"
 }
 
@@ -650,8 +650,10 @@ fetch)
 	atcoder_do_fetch
 	;;
 test|t)
+	### 引数: [テストケース名]
 	### サンプル入力で回答を実行し、サンプル出力との結果の一致をチェックします。
-	atcoder_do_test
+	### テストケース名を省略すると全ケースでチェックします。
+	atcoder_do_test "$@"
 	;;
 submit|sub|s)
 	### 回答を提出します。提出前にサンプル入出力と比較し、一致しない場合は中止します。
