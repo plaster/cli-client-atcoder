@@ -30,6 +30,12 @@ atcoder_assert_config() {
 	[ -v LANGTITLE ] || exitm "config missing: LANGTITLE"
 }
 
+show_config() {
+	m "Source: $SOURCEFILE"
+	m "Language: $LANGTITLE ($LANGUAGEID)"
+	atcoder_check_logged_in
+}
+
 atcoder_assert_edit() {
 	type -t atcoder_edit >/dev/null || exitm "config missing: atcoder_edit"
 	atcoder_assert_config
@@ -595,10 +601,6 @@ MAINCOMMAND="$0"
 SUBCOMMAND="$1"
 shift
 case "$SUBCOMMAND" in
-check-logged-in|whoami)
-	### AtCoderへのログイン状態を表示します。
-	atcoder_check_logged_in
-	;;
 login)
 	### AtCoderへログインします。IDとパスワードの入力を要求します。
 	### ログイン状態は $COOKIE_JAR ファイルにセッションとして保持されます。
@@ -607,6 +609,13 @@ login)
 logout)
 	### AtCoderをセッションログアウトします。
 	atcoder_do_logout
+	;;
+check-logged-in|whoami) #<UNDOCUMENTED>
+	###<UNDOCUMENTED> AtCoderへのログイン状態を表示します。
+	atcoder_check_logged_in
+	;;
+config) #<UNDOCUMENTED>
+	show_config "$@"
 	;;
 md|new)
 	### 引数: [contest]
