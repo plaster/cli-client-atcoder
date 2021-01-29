@@ -478,6 +478,20 @@ atcoder_do_switch() {
 	atcoder_assert_config
 }
 
+atcoder_do_cat_library() {
+	local LIBNAME="$1"
+	[ "X${LIBNAME}" != X ] || exitm "LIBNAME missing"
+	local EXT="${SOURCEFILE##*.}"
+	[ "X${EXT}" != X ] || exitm "cannot detect EXT"
+
+	atcoder_assert_config
+	atcoder_assert_tmplroot
+
+	local LIBFILE="${TMPLROOT}/lib/${LIBNAME}.${EXT}"
+	[ -r "$LIBFILE" ] || exitm "LIBFILE $LIBFILE not found."
+	cat "$LIBFILE"
+}
+
 atcoder_do_test() {
 	atcoder_assert_config
 	[ -d sample ] || {
@@ -653,6 +667,10 @@ edit|e)
 	### デフォルトでは EDITOR 環境変数が使われます。
 	### 設定ファイルで atcoder_edit() シェル関数を定義してカスタマイズできます。
 	atcoder_do_edit
+	;;
+library|lib) #<UNDOCUMENTED>
+	#<UNDOCUMENTED> ライブラリコードをcatします。vim等で :r! cca lib <テンプレート名> 等で呼ぶとよいでしょう。
+	atcoder_do_cat_library "$@"
 	;;
 fetch)
 	### タスクディレクトリ下にサンプル入出力をダウンロードして保存します。
