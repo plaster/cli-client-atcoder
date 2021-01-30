@@ -5,7 +5,7 @@ COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
 CURLCMD=(
 		curl -sS
-		-A "cli-client-atcoder/0.1"
+		-A "cli-client-atcoder/0.2"
 		-b "$COOKIE_JAR"
 		-c "$COOKIE_JAR"
 )
