@@ -520,9 +520,9 @@ atcoder_do_test() {
 	while read SAMPLE_IN
 	do
 		SAMPLE_OUT="${SAMPLE_IN%.in}.out"
-		m "atcoder_run < ${SAMPLE_IN}"
+		m "diff -Lgot <($SOURCEFILE < ${SAMPLE_IN}) -Lexpected ${SAMPLE_OUT}"
 		RUN_OUT="$(atcoder_run < "${SAMPLE_IN}")" || exitm "atcoder_run failed!"
-		if diff -U0 -L expected -L got "$SAMPLE_OUT" <(echo "$RUN_OUT")
+		if diff -y --suppress-common-lines -L got <(echo "$RUN_OUT") -L expected "$SAMPLE_OUT"
 		then
 			m OK
 		else
