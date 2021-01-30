@@ -620,7 +620,8 @@ show_help() {
 show_rights() {
 	cat <<-'EOF'
 
-	連絡先: https://github.com/plaster/cli-client-atcoder
+	- このツールは開発中です。詳細は以下URLにてご確認ください:
+	- https://github.com/plaster/cli-client-atcoder
 	EOF
 }
 
