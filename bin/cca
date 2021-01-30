@@ -4,12 +4,12 @@
 COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
 VERSION='0.2-dev'
-CURLCMD=(
-		curl -sS
-		-A "cli-client-atcoder/$VERSION"
-		-b "$COOKIE_JAR"
-		-c "$COOKIE_JAR"
-)
+invoke_curl() {
+		curl -sS \
+		-A "cli-client-atcoder/$VERSION" \
+		-b "$COOKIE_JAR" \
+		-c "$COOKIE_JAR" "$@"
+}
 
 # custom parameters
 declare -f atcoder_build
@@ -60,12 +60,12 @@ m() {
 atcoder_http_get() {
 	local URIPATH="$1"
 	shift
-	"${CURLCMD[@]}" "${URIBASE}${URIPATH}" "$@"
+	invoke_curl "${URIBASE}${URIPATH}" "$@"
 }
 atcoder_http_post() {
 	local URIPATH="$1"
 	shift
-	"${CURLCMD[@]}" -XPOST "${URIBASE}${URIPATH}" "$@"
+	invoke_curl -XPOST "${URIBASE}${URIPATH}" "$@"
 }
 
 atcoder_extract_js_var() {
