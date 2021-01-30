@@ -4,8 +4,8 @@ SOURCEFILE="Main.clj"
 LANGTITLE="Clojure (1.10.1.536)"
 LANGUAGEID=4013
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	clojure -J-Xss{stack_size:mb}M "./${SOURCEFILE}"
 }

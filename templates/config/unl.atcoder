@@ -4,8 +4,8 @@ SOURCEFILE="Main.unl"
 LANGTITLE="Unlambda (2.0.0)"
 LANGUAGEID=4064
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	unlambda "./${SOURCEFILE}"
 }

@@ -4,8 +4,8 @@ SOURCEFILE="Main.awk"
 LANGTITLE="Awk (GNU Awk 4.1.4)"
 LANGUAGEID=4009
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	awk -f "./${SOURCEFILE}"
 }

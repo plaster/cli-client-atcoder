@@ -4,7 +4,7 @@ SOURCEFILE="Main.sml"
 LANGTITLE="Standard ML (MLton 20130715)"
 LANGUAGEID=4054
 atcoder_build() {
-	false
+	mlton -output ./a.out "./${SOURCEFILE}"
 }
 atcoder_run() {
 	false

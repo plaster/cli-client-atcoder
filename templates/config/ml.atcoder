@@ -4,8 +4,8 @@ SOURCEFILE="Main.ml"
 LANGTITLE="OCaml (4.10.0)"
 LANGUAGEID=4039
 atcoder_build() {
-	false
+	eval $(opam env) ocamlfind ocamlopt -O2 -o ./a.out "./${SOURCEFILE}" -linkpkg -thread -package str,num,threads,containers,core,iter,batteries
 }
 atcoder_run() {
-	false
+	./a.out
 }

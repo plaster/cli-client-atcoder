@@ -4,8 +4,8 @@ SOURCEFILE="Main.c"
 LANGTITLE="C (GCC 9.2.1)"
 LANGUAGEID=4001
 atcoder_build() {
-	false
+	gcc -std=gnu11 -O2 -DONLINE_JUDGE -o ./a.out "./${SOURCEFILE}" -lm
 }
 atcoder_run() {
-	false
+	exec ./a.out
 }

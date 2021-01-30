@@ -4,8 +4,8 @@ SOURCEFILE="Main.bc"
 LANGTITLE="bc (1.07.1)"
 LANGUAGEID=4008
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	bc --mathlib "./${SOURCEFILE}"
 }

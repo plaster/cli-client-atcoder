@@ -4,8 +4,8 @@ SOURCEFILE="Main.php"
 LANGTITLE="PHP (7.4.4)"
 LANGUAGEID=4044
 atcoder_build() {
-	false
+	php -l "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	php "./${SOURCEFILE}"
 }

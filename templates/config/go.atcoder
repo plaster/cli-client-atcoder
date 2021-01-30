@@ -4,8 +4,8 @@ SOURCEFILE="Main.go"
 LANGTITLE="Go (1.14.1)"
 LANGUAGEID=4026
 atcoder_build() {
-	false
+	go build -buildmode=exe -o ./a.out "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	./a.out
 }

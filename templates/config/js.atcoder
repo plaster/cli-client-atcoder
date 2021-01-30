@@ -4,8 +4,8 @@ SOURCEFILE="Main.js"
 LANGTITLE="JavaScript (Node.js 12.16.1)"
 LANGUAGEID=4030
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	node "./${SOURCEFILE}" --stack-size={stack_size:kb}
 }

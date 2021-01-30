@@ -4,8 +4,8 @@ SOURCEFILE="Main.dc"
 LANGTITLE="dc (1.4.1)"
 LANGUAGEID=4019
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	dc -f "./${SOURCEFILE}"
 }

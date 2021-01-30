@@ -4,8 +4,8 @@ SOURCEFILE="Main.f08"
 LANGTITLE="Fortran (GNU Fortran 9.2.1)"
 LANGUAGEID=4025
 atcoder_build() {
-	false
+	gfortran -O2 -o ./a.out "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	./a.out
 }

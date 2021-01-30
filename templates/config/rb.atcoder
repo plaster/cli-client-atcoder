@@ -4,8 +4,8 @@ SOURCEFILE="Main.rb"
 LANGTITLE="Ruby (2.7.1)"
 LANGUAGEID=4049
 atcoder_build() {
-	false
+	ruby -w -c "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	RUBY_THREAD_VM_STACK_SIZE={stack_size:b} ruby "./${SOURCEFILE}"
 }

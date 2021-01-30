@@ -4,8 +4,8 @@ SOURCEFILE="Main.p6"
 LANGTITLE="Raku (Rakudo 2020.02.1)"
 LANGUAGEID=4043
 atcoder_build() {
-	false
+	perl6 -c "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	perl6 "./${SOURCEFILE}"
 }

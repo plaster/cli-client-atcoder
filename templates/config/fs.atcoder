@@ -4,8 +4,8 @@ SOURCEFILE="Main.fs"
 LANGTITLE="F# (Mono 10.2.3)"
 LANGUAGEID=4023
 atcoder_build() {
-	false
+	fsharpc -O -o ./a.exe "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	mono ./a.exe
 }

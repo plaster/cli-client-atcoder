@@ -4,8 +4,8 @@ SOURCEFILE="Main.pas"
 LANGTITLE="Pascal (FPC 3.0.4)"
 LANGUAGEID=4041
 atcoder_build() {
-	false
+	fpc -O2 -Sd -Sh -o./a.out "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	./a.out
 }

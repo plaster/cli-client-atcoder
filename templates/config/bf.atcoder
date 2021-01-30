@@ -4,8 +4,8 @@ SOURCEFILE="Main.bf"
 LANGTITLE="Brainfuck (bf 20041219)"
 LANGUAGEID=4062
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	bf -c999999999 "./${SOURCEFILE}"
 }

@@ -4,8 +4,8 @@ SOURCEFILE="Main.py"
 LANGTITLE="PyPy3 (7.3.0)"
 LANGUAGEID=4047
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	pypy3 "./${SOURCEFILE}"
 }

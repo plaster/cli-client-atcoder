@@ -4,8 +4,15 @@ SOURCEFILE="Main.vim"
 LANGTITLE="Vim (8.2.0460)"
 LANGUAGEID=4067
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	local t
+	t=$(tempfile) || exitm failed to create tempfile
+	trap "rm -f -- '$t'" EXIT
+	cat - > "$t"
+	TERM=dumb vim -N -u NONE -i NONE -s ./Main.vim "$t" > /dev/null 2>&1
+	cat "$t"
+	rm -f -- "$t"
+	trap - EXIT
 }

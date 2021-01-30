@@ -4,8 +4,8 @@ SOURCEFILE="Main.sed"
 LANGTITLE="Sed (4.4)"
 LANGUAGEID=4066
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	sed -f "./${SOURCEFILE}"
 }

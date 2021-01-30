@@ -4,8 +4,8 @@ SOURCEFILE="Main.hs"
 LANGTITLE="Haskell (GHC 8.8.3)"
 LANGUAGEID=4027
 atcoder_build() {
-	false
+	ghc -o a.out -O2 "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	./a.out
 }

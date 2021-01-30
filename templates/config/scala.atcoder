@@ -4,8 +4,8 @@ SOURCEFILE="Main.scala"
 LANGTITLE="Scala (2.13.1)"
 LANGUAGEID=4051
 atcoder_build() {
-	false
+	JAVACMD=/usr/lib/jvm/java-8-openjdk-amd64/bin/java scalac -opt:_ -opt-inline-from:'**' -opt-warnings:_ -deprecation -d . "./${SOURCEFILE}"
 }
 atcoder_run() {
-	false
+	JAVACMD=/usr/lib/jvm/java-8-openjdk-amd64/bin/java scala -J-Xss{stack_size:mb}M -classpath . Main
 }

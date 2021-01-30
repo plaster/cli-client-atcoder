@@ -4,8 +4,8 @@ SOURCEFILE="Main.txt"
 LANGTITLE="Text (cat 8.28)"
 LANGUAGEID=4056
 atcoder_build() {
-	false
+	true
 }
 atcoder_run() {
-	false
+	cat "./${SOURCEFILE}"
 }

@@ -4,8 +4,8 @@ SOURCEFILE="Main.cs"
 LANGTITLE="C# (Mono-mcs 6.8.0.105)"
 LANGUAGEID=4011
 atcoder_build() {
-	false
+	mcs -warn:0 -o+ -unsafe -r:System.Numerics -langversion:latest "./${SOURCEFILE}" -out:./Main.exe
 }
 atcoder_run() {
-	false
+	mono ./Main.exe
 }
