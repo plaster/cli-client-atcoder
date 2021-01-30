@@ -460,10 +460,24 @@ atcoder_do_init() {
 
 atcoder_do_switch() {
 	local ATCODER_LANG="$1"
-	[ "X${ATCODER_LANG}" != X ] || exitm "language is not specified."
-	atcoder_assert_pwd
-	atcoder_load_config
+
 	atcoder_assert_tmplroot
+
+	if [ "X${ATCODER_LANG}" = X ]
+	then
+		m "usage: $0 switch <LANGUAGE>"
+		m "$(printf '%-10s %s\n' "LANGUAGE" "DESCRIPTION")"
+		m "$(printf '%-10s %s\n' "----------" "------------------------------")"
+		local CONFIGTMPL
+		while read CONFIGTMPL
+		do
+			. "$CONFIGTMPL"
+			ATCODER_LANG="$(basename "$CONFIGTMPL")"
+			ATCODER_LANG="${ATCODER_LANG%.*}"
+			m "$(printf '%-10s %s\n' "$ATCODER_LANG" "$LANGTITLE")"
+		done < <(find "${TMPLROOT}/config/" -mindepth 1 -maxdepth 1 -name '*.atcoder' | sort)
+		exitm "please specify LANGUAGE"
+	fi
 
 	case "$ATCODER_LANG" in
 	default)
@@ -475,6 +489,7 @@ atcoder_do_switch() {
 		;;
 	esac
 
+	# reload config
 	atcoder_load_config
 	atcoder_assert_config
 }
