@@ -3,9 +3,10 @@
 # global parameters
 COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
+VERSION='0.2-dev'
 CURLCMD=(
 		curl -sS
-		-A "cli-client-atcoder/0.2"
+		-A "cli-client-atcoder/$VERSION"
 		-b "$COOKIE_JAR"
 		-c "$COOKIE_JAR"
 )
@@ -618,10 +619,16 @@ show_help() {
 }
 
 show_rights() {
-	cat <<-'EOF'
+	cat <<-EOF
 
-	- このツールは開発中です。詳細は以下URLにてご確認ください:
-	- https://github.com/plaster/cli-client-atcoder
+	このツールは開発中です。詳細は以下URLにてご確認ください:
+	https://github.com/plaster/cli-client-atcoder
+	EOF
+}
+
+show_version() {
+	cat <<-EOF
+	cli-client-atcoder version $VERSION - AtCoder 提出クライアント
 	EOF
 }
 
@@ -730,6 +737,10 @@ help-densely) #<UNDOCUMENTED>
 help-sparsely) #<UNDOCUMENTED>
 	show_help details
 	show_rights
+	;;
+version)
+	### バージョンを表示します。
+	show_version
 	;;
 '')
 	show_help
