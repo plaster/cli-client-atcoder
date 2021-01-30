@@ -471,6 +471,8 @@ atcoder_do_switch() {
 		local CONFIGTMPL
 		while read CONFIGTMPL
 		do
+			ATCODER_LANG=
+			LANGTITLE=
 			. "$CONFIGTMPL"
 			ATCODER_LANG="$(basename "$CONFIGTMPL")"
 			ATCODER_LANG="${ATCODER_LANG%.*}"
