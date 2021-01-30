@@ -480,16 +480,29 @@ atcoder_do_switch() {
 
 atcoder_do_cat_library() {
 	local LIBNAME="$1"
-	[ "X${LIBNAME}" != X ] || exitm "LIBNAME missing"
 	local EXT="${SOURCEFILE##*.}"
 	[ "X${EXT}" != X ] || exitm "cannot detect EXT"
 
 	atcoder_assert_config
 	atcoder_assert_tmplroot
 
-	local LIBFILE="${TMPLROOT}/lib/${LIBNAME}.${EXT}"
-	[ -r "$LIBFILE" ] || exitm "LIBFILE $LIBFILE not found."
-	cat "$LIBFILE"
+	local LIBFILE
+	if [ "X${LIBNAME}" != X ]
+	then
+		LIBFILE="${TMPLROOT}/lib/${LIBNAME}.${EXT}"
+		[ -r "$LIBFILE" ] || exitm "LIBFILE $LIBFILE not found."
+		cat "$LIBFILE"
+	else
+		echo "Libraries for ${LANGTITLE} (.${EXT})"
+		printf '%-20s %s\n' libname desciption
+		printf '%20s %s\n' '--------------------' '--------------------'
+		while read LIBFILE
+		do
+			LIBNAME="${LIBFILE%.*}"
+			LIBNAME="$(basename "$LIBNAME")"
+			printf '%-20s %s\n' "$LIBNAME" "$(head -n1 "$LIBFILE")"
+		done < <(find "${TMPLROOT}/lib/" -name '*.'"${EXT}")
+	fi
 }
 
 atcoder_do_test() {
