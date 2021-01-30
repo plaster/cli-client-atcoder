@@ -486,6 +486,8 @@ atcoder_do_cat_library() {
 	atcoder_assert_config
 	atcoder_assert_tmplroot
 
+	[ -d "${TMPLROOT}/lib" ] || exitm "${TMPLROOT}/lib not found."
+
 	local LIBFILE
 	if [ "X${LIBNAME}" != X ]
 	then
