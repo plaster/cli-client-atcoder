@@ -78,7 +78,7 @@ test (または t)
 submit (または sub, s)
 	 回答を提出します。提出前にサンプル入出力と比較し、一致しない場合は中止します。
 
-force-submit
+force-submit (または fsub)
 	 回答を提出します。サンプル入出力との比較は行いません。
 
 repl
@@ -87,5 +87,6 @@ repl
 help
 	 このヘルプを表示します。
 
-連絡先: https://github.com/plaster/cli-client-atcoder
+- このツールは開発中です。詳細は以下URLにてご確認ください:
+- https://github.com/plaster/cli-client-atcoder
 ```
