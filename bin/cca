@@ -709,7 +709,7 @@ submit|sub|s)
 		exitm "test failed."
 	fi
 	;;
-force-submit)
+force-submit|fsub)
 	### 回答を提出します。サンプル入出力との比較は行いません。
 	atcoder_do_submit
 	;;
