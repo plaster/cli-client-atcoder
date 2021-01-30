@@ -87,6 +87,9 @@ repl
 help
 	 このヘルプを表示します。
 
-- このツールは開発中です。詳細は以下URLにてご確認ください:
-- https://github.com/plaster/cli-client-atcoder
+version
+	 バージョンを表示します。
+
+このツールは開発中です。詳細は以下URLにてご確認ください:
+https://github.com/plaster/cli-client-atcoder
 ```
