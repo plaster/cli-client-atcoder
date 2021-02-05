@@ -4,13 +4,44 @@
 COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
 VERSION='0.2-dev'
-CURLCMD=curl
-SEDCMD=sed
+CURLCMD=
+SEDCMD=
 invoke_curl() {
 		"$CURLCMD" -sS \
 		-A "cli-client-atcoder/$VERSION" \
 		-b "$COOKIE_JAR" \
 		-c "$COOKIE_JAR" "$@"
+}
+
+atcoder_detect_env() {
+
+	# check curl
+	if [ -z "$CURLCMD" ]
+	then
+		CURLCMD=curl
+	fi
+	which "$CURLCMD" >/dev/null || die_of "$CURLCMD is not installed."
+
+	# check GNU sed
+	local GNUSEDCMD_LIST=()
+	if [ -z "$SEDCMD" ]
+	then GNUSEDCMD_LIST=( 'sed' 'gsed' )  # auto detection
+	else GNUSEDCMD_LIST=( "$SEDCMD" ) # manually specified
+	fi
+
+	local GNUSEDCMD=
+	for GNUSEDCMD in "${GNUSEDCMD_LIST[@]}"
+	do
+		if which "$GNUSEDCMD" >/dev/null && "$GNUSEDCMD" --version </dev/null 2>/dev/null | grep GNU >/dev/null
+		then break
+		else GNUSEDCMD=
+		fi
+	done
+	[ -n "$GNUSEDCMD" ] || if [ -z "$SEDCMD" ]
+	then die_of "GNU sed is not installed."
+	else die_of "$SEDCMD is not GNU sed."
+	fi
+	SEDCMD="$GNUSEDCMD"
 }
 
 # custom parameters
@@ -653,6 +684,7 @@ show_version() {
 
 # dispatch
 atcoder_load_config
+atcoder_detect_env
 MAINCOMMAND="$0"
 SUBCOMMAND="$1"
 shift
