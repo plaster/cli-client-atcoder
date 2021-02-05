@@ -23,22 +23,22 @@ declare -f atcoder_edit
 declare -f atcoder_repl
 
 atcoder_assert_config() {
-	type -t atcoder_build >/dev/null || exitm "config missing: atcoder_build"
-	type -t atcoder_run >/dev/null || exitm "config missing: atcoder_run"
-	[ -v SOURCETMPL ] || exitm "config missing: SOURCETMPL"
-	[ -v SOURCEFILE ] || exitm "config missing: SOURCEFILE"
-	[ -v LANGUAGEID ] || exitm "config missing: LANGUAGEID"
-	[ -v LANGTITLE ] || exitm "config missing: LANGTITLE"
+	type -t atcoder_build >/dev/null || die_of "config missing: atcoder_build"
+	type -t atcoder_run >/dev/null || die_of "config missing: atcoder_run"
+	[ -v SOURCETMPL ] || die_of "config missing: SOURCETMPL"
+	[ -v SOURCEFILE ] || die_of "config missing: SOURCEFILE"
+	[ -v LANGUAGEID ] || die_of "config missing: LANGUAGEID"
+	[ -v LANGTITLE ] || die_of "config missing: LANGTITLE"
 }
 
 show_config() {
-	m "Source: $SOURCEFILE"
-	m "Language: $LANGTITLE ($LANGUAGEID)"
+	info_of "Source: $SOURCEFILE"
+	info_of "Language: $LANGTITLE ($LANGUAGEID)"
 	atcoder_check_logged_in
 }
 
 atcoder_assert_edit() {
-	type -t atcoder_edit >/dev/null || exitm "config missing: atcoder_edit"
+	type -t atcoder_edit >/dev/null || die_of "config missing: atcoder_edit"
 	atcoder_assert_config
 }
 
@@ -48,11 +48,11 @@ atcoder_load_config() {
 }
 
 # common functions
-exitm() {
+die_of() {
 	echo 1>&2 "ABORT: $@"
 	exit 1
 }
-m() {
+info_of() {
 	echo 1>&2 "INFO: $@"
 }
 
@@ -71,43 +71,43 @@ atcoder_http_post() {
 atcoder_extract_js_var() {
 	local VARNAME VALUE
 	VARNAME="$1"
-	[ -n "$VARNAME" ] || exitm "INTERNAL ERROR: VARNAME MISSING"
+	[ -n "$VARNAME" ] || die_of "INTERNAL ERROR: VARNAME MISSING"
 	sed -ne "/var $VARNAME = \"/ { s/.*var $VARNAME = \"//; s/\".*//; p; Q }" <<< "$CONTENT"
 }
 
 atcoder_check_logged_in() {
 	local CONTENT USER_SCREEN_NAME
-	CONTENT="$(atcoder_http_get /home)" || exitm "failed to get /home"
+	CONTENT="$(atcoder_http_get /home)" || die_of "failed to get /home"
 	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
 	if [ -z "$USER_SCREEN_NAME" ]
-	then m "not logged in."
+	then info_of "not logged in."
 		return 1
-	else m "logged in as: $USER_SCREEN_NAME"
+	else info_of "logged in as: $USER_SCREEN_NAME"
 		return 0
 	fi
 }
 
 atcoder_do_login() {
 	local CONTENT CSRF_TOKEN USER_SCREEN_NAME
-	CONTENT="$(atcoder_http_get /login)" || exitm "failed to get /login"
+	CONTENT="$(atcoder_http_get /login)" || die_of "failed to get /login"
 	CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
-	[ -n "$CSRF_TOKEN" ] || exitm "failed to detect csrf_token"
-	# m "csrf_token: $CSRF_TOKEN"
+	[ -n "$CSRF_TOKEN" ] || die_of "failed to detect csrf_token"
+	# info_of "csrf_token: $CSRF_TOKEN"
 	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
 	if [ -z "$USER_SCREEN_NAME" ]
-	then m "not logged in."
-	else m "logged in as: $USER_SCREEN_NAME"
+	then info_of "not logged in."
+	else info_of "logged in as: $USER_SCREEN_NAME"
 		return 0
 	fi
 
 	echo 1>&2 -n "user: "
-	read USER_SCREEN_NAME || exitm "Cancelled."
+	read USER_SCREEN_NAME || die_of "Cancelled."
 
 	local PASSWORD
 	echo 1>&2 -n "pass: "
-	read -s PASSWORD || exitm "Cancelled."
+	read -s PASSWORD || die_of "Cancelled."
 
-	m "login..."
+	info_of "login..."
 	local STATUS
 	STATUS="$(atcoder_http_post /login \
 		-F "username=$USER_SCREEN_NAME" \
@@ -115,21 +115,21 @@ atcoder_do_login() {
 		-F "csrf_token=$CSRF_TOKEN" \
 		-o /dev/null -w '%{http_code}\n'
 		)" ||
-		exitm "failed to post /login"
+		die_of "failed to post /login"
 	case "$STATUS" in
 	302) ;;
-	*)   exitm "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
+	*)   die_of "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
 	esac
 
 
 	atcoder_check_logged_in
 	case "$?" in
 	0)
-		m "login ok."
+		info_of "login ok."
 		return 0
 		;;
 	*)
-		m "login failed."
+		info_of "login failed."
 		return 1
 		;;
 	esac
@@ -137,37 +137,37 @@ atcoder_do_login() {
 
 atcoder_do_logout() {
 	local CONTENT CSRF_TOKEN USER_SCREEN_NAME
-	CONTENT="$(atcoder_http_get /login)" || exitm "failed to get /login"
+	CONTENT="$(atcoder_http_get /login)" || die_of "failed to get /login"
 	CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
-	[ -n "$CSRF_TOKEN" ] || exitm "failed to detect csrf_token"
-	# m "csrf_token: $CSRF_TOKEN"
+	[ -n "$CSRF_TOKEN" ] || die_of "failed to detect csrf_token"
+	# info_of "csrf_token: $CSRF_TOKEN"
 	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
 	if [ -z "$USER_SCREEN_NAME" ]
-	then m "not logged in."
+	then info_of "not logged in."
 		return 0
-	else m "logged in as: $USER_SCREEN_NAME"
+	else info_of "logged in as: $USER_SCREEN_NAME"
 	fi
 
-	m "logout..."
+	info_of "logout..."
 	local STATUS
 	STATUS="$(atcoder_http_post /logout \
 		-F "csrf_token=$CSRF_TOKEN" \
 		-o /dev/null -w '%{http_code}\n'
 		)" ||
-		exitm "failed to post /logout"
+		die_of "failed to post /logout"
 	case "$STATUS" in
 	302) ;;
-	*)   exitm "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
+	*)   die_of "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
 	esac
 
 	atcoder_check_logged_in
 	case "$?" in
 	1)
-		m "logout ok."
+		info_of "logout ok."
 		return 0
 		;;
 	*)
-		m "logout failed."
+		info_of "logout failed."
 		return 1
 		;;
 	esac
@@ -177,7 +177,7 @@ atcoder_detect_by_dir() {
 	case "$1" in
 	CONTEST) sed -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\1@; p }' ;;
 	PROBLEM) sed -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\2@; p }' ;;
-	*) exitm "INTERNAL ERROR: unknown: $1" ;;
+	*) die_of "INTERNAL ERROR: unknown: $1" ;;
 	esac
 }
 
@@ -190,10 +190,10 @@ declare PROBLEM
 atcoder_assert_pwd() {
 	CONTEST="$(atcoder_detect_by_pwd CONTEST)"
 	PROBLEM="$(atcoder_detect_by_pwd PROBLEM)"
-	[ -n "$CONTEST" ] || exitm "failed to detect CONTEST"
-	[ -n "$PROBLEM" ] || exitm "failed to detect PROBLEM"
-	m CONTEST: $CONTEST
-	m PROBLEM: $PROBLEM
+	[ -n "$CONTEST" ] || die_of "failed to detect CONTEST"
+	[ -n "$PROBLEM" ] || die_of "failed to detect PROBLEM"
+	info_of CONTEST: $CONTEST
+	info_of PROBLEM: $PROBLEM
 }
 
 atcoder_extract_task_screen_names() {
@@ -218,15 +218,15 @@ atcoder_do_mkdir() {
 		already_in_contest_dir=1
 	fi
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
-	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
+	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || die_of "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
-	[ -n "$TASK_SCREEN_NAMES" ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
+	[ -n "$TASK_SCREEN_NAMES" ] || die_of "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
 
 	if [ "$already_in_contest_dir" != 1 ]
 	then
 		[ -d "$CONTEST" ] || {
-			mkdir "$CONTEST" && m "mkdir $CONTEST for contest $CONTEST now"
-		} || exitm "failed to mkdir $CONTEST"
+			mkdir "$CONTEST" && info_of "mkdir $CONTEST for contest $CONTEST now"
+		} || die_of "failed to mkdir $CONTEST"
 		cd "$CONTEST"
 	fi
 
@@ -241,22 +241,22 @@ atcoder_do_mkdir() {
 			TASKDIR="$(sed -e 's/.*_//' <<< "$TASK_SCREEN_NAME")"
 			;;
 		'')
-			exitm "internal error: mode missing." ;;
+			die_of "internal error: mode missing." ;;
 		*)
-			exitm "internal error: unknown mode: $mode" ;;
+			die_of "internal error: unknown mode: $mode" ;;
 		esac
 
 		if [ -d "$TASKDIR" ]
 		then
-			m "mkdir $TASKDIR for $TASK_SCREEN_NAME is already done"
+			info_of "mkdir $TASKDIR for $TASK_SCREEN_NAME is already done"
 		else
-			m "mkdir $TASKDIR for $TASK_SCREEN_NAME now"
-			mkdir "$TASKDIR" || exitm "failed to mkdir $TASKDIR"
+			info_of "mkdir $TASKDIR for $TASK_SCREEN_NAME now"
+			mkdir "$TASKDIR" || die_of "failed to mkdir $TASKDIR"
 		fi
 	done <<< "$TASK_SCREEN_NAMES"
 	if [ "$already_in_contest_dir" != 1 ]
 	then
-		m "\`cd ${CONTEST}\` for eval"
+		info_of "\`cd ${CONTEST}\` for eval"
 		echo "cd ${CONTEST}"
 	fi
 }
@@ -265,11 +265,11 @@ atcoder_do_edit() {
 	atcoder_assert_config
 	atcoder_assert_pwd
 	[ -e "${SOURCEFILE}" ] || {
-		m "no source to edit: ${SOURCEFILE} not found."
+		info_of "no source to edit: ${SOURCEFILE} not found."
 		echo 1>&2 -n 'Hit Enter to init. > '
 		read
 		atcoder_do_init
-		m "OK"
+		info_of "OK"
 		echo 1>&2 -n 'Hit Enter to continue. > '
 		read
 	}
@@ -299,22 +299,22 @@ atcoder_task() {
 	atcoder_assert_pwd
 
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
-	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
+	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || die_of "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
-	[ -n "$TASK_SCREEN_NAMES" ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
+	[ -n "$TASK_SCREEN_NAMES" ] || die_of "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
 	TASK_SCREEN_NAME="$(
 		grep "\<$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES" ||
 		grep "_$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES"
 	)"
-	[ -n "$TASK_SCREEN_NAME" ] || exitm "failed to determinate TASK_SCREEN_NAME"
-	m TASK_SCREEN_NAME: $TASK_SCREEN_NAME
+	[ -n "$TASK_SCREEN_NAME" ] || die_of "failed to determinate TASK_SCREEN_NAME"
+	info_of TASK_SCREEN_NAME: $TASK_SCREEN_NAME
 
 	case "$SUBCOMMAND" in
 	fetch)
 		local TASKPATH="/contests/${CONTEST}/tasks/${TASK_SCREEN_NAME}"
-		CONTENT="$(atcoder_http_get "$TASKPATH")" || exitm "failed to get $TASKPATH"
+		CONTENT="$(atcoder_http_get "$TASKPATH")" || die_of "failed to get $TASKPATH"
 
-		[ -d sample ] || mkdir sample || exitm "failed to mkdir sample"
+		[ -d sample ] || mkdir sample || die_of "failed to mkdir sample"
 		local header_pat HEADER_PAT
 		local SAMPLENO=1
 
@@ -324,13 +324,13 @@ atcoder_task() {
 			HEADER_PAT="<h3>$header_pat</h3>"
 			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || break
 			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.in
-			m found "$header_pat"
+			info_of found "$header_pat"
 
 			header_pat="Sample Output $SAMPLENO"
 			HEADER_PAT="<h3>$header_pat</h3>"
-			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || exitm "no $header_pat found."
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || die_of "no $header_pat found."
 			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.out
-			m found "$header_pat"
+			info_of found "$header_pat"
 
 			SAMPLENO=$(( SAMPLENO + 1 ))
 		done
@@ -341,31 +341,31 @@ atcoder_task() {
 			HEADER_PAT="<h3>$header_pat</h3>"
 			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || break
 			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.in
-			m found "$header_pat"
+			info_of found "$header_pat"
 
 			header_pat="出力例 $SAMPLENO"
 			HEADER_PAT="<h3>$header_pat</h3>"
-			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || exitm "no $header_pat found."
+			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" >/dev/null || die_of "no $header_pat found."
 			atcoder_extract_pre "$HEADER_PAT" <<< "$CONTENT" > sample/$SAMPLENO.out
-			m found "$header_pat"
+			info_of found "$header_pat"
 
 			SAMPLENO=$(( SAMPLENO + 1 ))
 		done
 
 		if [ "$SAMPLENO" == 1 ]; then
-			exitm 'No samples found.'
+			die_of 'No samples found.'
 		fi
 		;;
 
 	submit)
 		local CSRF_TOKEN USER_SCREEN_NAME
 		CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
-		[ -n "$CSRF_TOKEN" ] || exitm "failed to detect csrf_token"
+		[ -n "$CSRF_TOKEN" ] || die_of "failed to detect csrf_token"
 		USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
-		[ -n "$USER_SCREEN_NAME" ] || exitm "login first"
-		[ -e "${SOURCEFILE}" ] || exitm "no source to submit"
+		[ -n "$USER_SCREEN_NAME" ] || die_of "login first"
+		[ -e "${SOURCEFILE}" ] || die_of "no source to submit"
 
-		m "submitting $SOURCEFILE as $LANGTITLE ..."
+		info_of "submitting $SOURCEFILE as $LANGTITLE ..."
 		local STATUS
 		STATUS="$(atcoder_http_post "/contests/${CONTEST}/submit" \
 			--data-urlencode "data.LanguageId=${LANGUAGEID}" \
@@ -374,14 +374,14 @@ atcoder_task() {
 			--data-urlencode "csrf_token=$CSRF_TOKEN" \
 			-o /dev/null -w '%{http_code}\n'
 			)" ||
-			exitm "submit failed."
+			die_of "submit failed."
 		case "$STATUS" in
 		302) ;;
-		*)   exitm "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
+		*)   die_of "SOMETHING WRONG: non-302 response($STATUS) after post" ;;
 		esac
 		;;
 	*)
-		exitm "INTERNAL ERROR: unknown: $SUBCOMMAND"
+		die_of "INTERNAL ERROR: unknown: $SUBCOMMAND"
 		;;
 	esac
 }
@@ -394,17 +394,17 @@ checked_cp() {
 	local CPFROM="$1"
 	local CPTO="$2"
 
-	[ -f "${CPFROM}" ] || exitm "cannoct access to template: $CPFROM"
+	[ -f "${CPFROM}" ] || die_of "cannoct access to template: $CPFROM"
 
-	m cp "$CPFROM" "$CPTO"
-	cp "$CPFROM" "$CPTO" || exitm "cp faield."
+	info_of cp "$CPFROM" "$CPTO"
+	cp "$CPFROM" "$CPTO" || die_of "cp faield."
 }
 
 checked_cp_i() {
 	local CPFROM="$1"
 	local CPTO="$2"
 
-	[ -f "${CPFROM}" ] || exitm "cannoct access to template: $CPFROM"
+	[ -f "${CPFROM}" ] || die_of "cannoct access to template: $CPFROM"
 
 	# `cp -i` don't fail even if overwrite cancelled interactively.
 	if [ -e "$CPTO" ]
@@ -416,20 +416,20 @@ checked_cp_i() {
 		0)
 			;;
 		*)
-			exitm "Cancelled."
+			die_of "Cancelled."
 			;;
 		esac
 		case "$C" in
 		Y|y)
 			;;
 		*)
-			exitm "Cancelled."
+			die_of "Cancelled."
 			;;
 		esac
 	fi
 
-	m cp "$CPFROM" "$CPTO"
-	cp "$CPFROM" "$CPTO" || exitm "cp faield."
+	info_of cp "$CPFROM" "$CPTO"
+	cp "$CPFROM" "$CPTO" || die_of "cp faield."
 }
 
 atcoder_assert_tmplroot() {
@@ -438,7 +438,7 @@ atcoder_assert_tmplroot() {
 	RC="$?"
 	case "$RC" in
 	0) ;;
-	*) exitm "Failed to detect WORKROOT($RC). Please check if git repo is properly checked out." ;;
+	*) die_of "Failed to detect WORKROOT($RC). Please check if git repo is properly checked out." ;;
 	esac
 	TMPLROOT="${WORKROOT}/templates"
 }
@@ -465,9 +465,9 @@ atcoder_do_switch() {
 
 	if [ -z "${ATCODER_LANG}" ]
 	then
-		m "usage: $0 switch <LANGUAGE>"
-		m "$(printf '%-10s %s\n' "LANGUAGE" "DESCRIPTION")"
-		m "$(printf '%-10s %s\n' "----------" "------------------------------")"
+		info_of "usage: $0 switch <LANGUAGE>"
+		info_of "$(printf '%-10s %s\n' "LANGUAGE" "DESCRIPTION")"
+		info_of "$(printf '%-10s %s\n' "----------" "------------------------------")"
 		local CONFIGTMPL
 		while read CONFIGTMPL
 		do
@@ -476,18 +476,18 @@ atcoder_do_switch() {
 			. "$CONFIGTMPL"
 			ATCODER_LANG="$(basename "$CONFIGTMPL")"
 			ATCODER_LANG="${ATCODER_LANG%.*}"
-			m "$(printf '%-10s %s\n' "$ATCODER_LANG" "$LANGTITLE")"
+			info_of "$(printf '%-10s %s\n' "$ATCODER_LANG" "$LANGTITLE")"
 		done < <(find "${TMPLROOT}/config/" -mindepth 1 -maxdepth 1 -name '*.atcoder' | sort)
-		exitm "please specify LANGUAGE"
+		die_of "please specify LANGUAGE"
 	fi
 
 	case "$ATCODER_LANG" in
 	default)
-		[ ! -e ./.atcoder ] || rm ./.atcoder || exitm "failed to rm ./.atcoder"
+		[ ! -e ./.atcoder ] || rm ./.atcoder || die_of "failed to rm ./.atcoder"
 		;;
 	*)
 		checked_cp "${TMPLROOT}/config/${ATCODER_LANG}.atcoder" ./.atcoder
-		chmod u+x ./.atcoder || exitm "failed to chmod ./.atcoder"
+		chmod u+x ./.atcoder || die_of "failed to chmod ./.atcoder"
 		;;
 	esac
 
@@ -499,18 +499,18 @@ atcoder_do_switch() {
 atcoder_do_cat_library() {
 	local LIBNAME="$1"
 	local EXT="${SOURCEFILE##*.}"
-	[ -n "${EXT}" ] || exitm "cannot detect EXT"
+	[ -n "${EXT}" ] || die_of "cannot detect EXT"
 
 	atcoder_assert_config
 	atcoder_assert_tmplroot
 
-	[ -d "${TMPLROOT}/lib" ] || exitm "${TMPLROOT}/lib not found."
+	[ -d "${TMPLROOT}/lib" ] || die_of "${TMPLROOT}/lib not found."
 
 	local LIBFILE
 	if [ -n "${LIBNAME}" ]
 	then
 		LIBFILE="${TMPLROOT}/lib/${LIBNAME}.${EXT}"
-		[ -r "$LIBFILE" ] || exitm "LIBFILE $LIBFILE not found."
+		[ -r "$LIBFILE" ] || die_of "LIBFILE $LIBFILE not found."
 		cat "$LIBFILE"
 	else
 		echo "Libraries for ${LANGTITLE} (.${EXT})"
@@ -528,23 +528,23 @@ atcoder_do_cat_library() {
 atcoder_do_test() {
 	atcoder_assert_config
 	[ -d sample ] || {
-		m "fetching first."
+		info_of "fetching first."
 		atcoder_do_fetch
 	}
-	atcoder_build || exitm "build faield."
-	m "running $SOURCEFILE on $LANGTITLE ..."
+	atcoder_build || die_of "build faield."
+	info_of "running $SOURCEFILE on $LANGTITLE ..."
 	local SAMPLE_IN SAMPLE_OUT RUN_OUT RC
 	RC=0
 	while read SAMPLE_IN
 	do
 		SAMPLE_OUT="${SAMPLE_IN%.in}.out"
-		m "diff -Lgot <($SOURCEFILE < ${SAMPLE_IN}) -Lexpected ${SAMPLE_OUT}"
-		RUN_OUT="$(atcoder_run < "${SAMPLE_IN}")" || exitm "atcoder_run failed!"
+		info_of "diff -Lgot <($SOURCEFILE < ${SAMPLE_IN}) -Lexpected ${SAMPLE_OUT}"
+		RUN_OUT="$(atcoder_run < "${SAMPLE_IN}")" || die_of "atcoder_run failed!"
 		if diff -y --suppress-common-lines -L got <(echo "$RUN_OUT") -L expected "$SAMPLE_OUT"
 		then
-			m OK
+			info_of OK
 		else
-			m NG
+			info_of NG
 			RC=1
 		fi
 	done < <(if [ -n "$1" ]; then echo sample/"$1".in; else find sample -name '*.in' | sort -n; fi)
@@ -552,7 +552,7 @@ atcoder_do_test() {
 }
 
 atcoder_do_repl() {
-	type -t atcoder_repl >/dev/null || exitm "config missing: atcoder_repl"
+	type -t atcoder_repl >/dev/null || die_of "config missing: atcoder_repl"
 	atcoder_repl
 }
 
@@ -573,7 +573,7 @@ show_help() {
 		以下のサブコマンドが利用可能です。
 		EOF
 		;;
-	*)  exitm "internal error: unknown mode: $mode" ;;
+	*)  die_of "internal error: unknown mode: $mode" ;;
 	esac
 	local MAINCOMMANDNAME="${MAINCOMMAND##*/}"
 	local SEDARGS=(
@@ -616,7 +616,7 @@ show_help() {
 				p
 			}
 		}' ) ;;
-	*)  exitm "internal error: unknown mode: $mode" ;;
+	*)  die_of "internal error: unknown mode: $mode" ;;
 	esac
 
 	case "$1" in
@@ -630,7 +630,7 @@ show_help() {
 				}
 			}' )
 		;;
-	*)  exitm "internal error: unknown mode: $mode" ;;
+	*)  die_of "internal error: unknown mode: $mode" ;;
 	esac
 	sed "${SEDARGS[@]}" < "$MAINCOMMAND"
 }
@@ -724,14 +724,14 @@ test|t)
 	;;
 submit|sub|s)
 	### 回答を提出します。提出前にサンプル入出力と比較し、一致しない場合は中止します。
-	m "testing first."
+	info_of "testing first."
 	if atcoder_do_test
 	then
-		m "All tests OK."
-		m "Now submit!"
+		info_of "All tests OK."
+		info_of "Now submit!"
 		atcoder_do_submit
 	else
-		exitm "test failed."
+		die_of "test failed."
 	fi
 	;;
 force-submit|fsub)
@@ -761,9 +761,9 @@ version)
 	;;
 '')
 	show_help
-	exitm "SUBCOMMAND MISSING"
+	die_of "SUBCOMMAND MISSING"
 	;;
 *)
-	exitm "UNKNOWN SUBCOMMAND: $SUBCOMMAND"
+	die_of "UNKNOWN SUBCOMMAND: $SUBCOMMAND"
 	;;
 esac
