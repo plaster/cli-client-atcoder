@@ -3,8 +3,9 @@ AtCoderのコマンドライン提出クライアントです。
 
 ## 要求
 
-- curl
 - bash
+- curl
+- GNU sed
 
 ## インストール
 
