@@ -3,7 +3,7 @@
 # global parameters
 COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
-VERSION='0.2-dev'
+VERSION='0.3.0-dev'
 CURLCMD=
 SEDCMD=
 invoke_curl() {
