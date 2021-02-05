@@ -71,7 +71,7 @@ atcoder_http_post() {
 atcoder_extract_js_var() {
 	local VARNAME VALUE
 	VARNAME="$1"
-	[ "X$VARNAME" != X ] || exitm "INTERNAL ERROR: VARNAME MISSING"
+	[ -n "$VARNAME" ] || exitm "INTERNAL ERROR: VARNAME MISSING"
 	sed -ne "/var $VARNAME = \"/ { s/.*var $VARNAME = \"//; s/\".*//; p; Q }" <<< "$CONTENT"
 }
 
@@ -79,7 +79,7 @@ atcoder_check_logged_in() {
 	local CONTENT USER_SCREEN_NAME
 	CONTENT="$(atcoder_http_get /home)" || exitm "failed to get /home"
 	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
-	if [ "X$USER_SCREEN_NAME" = X ]
+	if [ -z "$USER_SCREEN_NAME" ]
 	then m "not logged in."
 		return 1
 	else m "logged in as: $USER_SCREEN_NAME"
@@ -91,10 +91,10 @@ atcoder_do_login() {
 	local CONTENT CSRF_TOKEN USER_SCREEN_NAME
 	CONTENT="$(atcoder_http_get /login)" || exitm "failed to get /login"
 	CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
-	[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
+	[ -n "$CSRF_TOKEN" ] || exitm "failed to detect csrf_token"
 	# m "csrf_token: $CSRF_TOKEN"
 	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
-	if [ "X$USER_SCREEN_NAME" = X ]
+	if [ -z "$USER_SCREEN_NAME" ]
 	then m "not logged in."
 	else m "logged in as: $USER_SCREEN_NAME"
 		return 0
@@ -139,10 +139,10 @@ atcoder_do_logout() {
 	local CONTENT CSRF_TOKEN USER_SCREEN_NAME
 	CONTENT="$(atcoder_http_get /login)" || exitm "failed to get /login"
 	CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
-	[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
+	[ -n "$CSRF_TOKEN" ] || exitm "failed to detect csrf_token"
 	# m "csrf_token: $CSRF_TOKEN"
 	USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
-	if [ "X$USER_SCREEN_NAME" = X ]
+	if [ -z "$USER_SCREEN_NAME" ]
 	then m "not logged in."
 		return 0
 	else m "logged in as: $USER_SCREEN_NAME"
@@ -190,8 +190,8 @@ declare PROBLEM
 atcoder_assert_pwd() {
 	CONTEST="$(atcoder_detect_by_pwd CONTEST)"
 	PROBLEM="$(atcoder_detect_by_pwd PROBLEM)"
-	[ "X$CONTEST" != X ] || exitm "failed to detect CONTEST"
-	[ "X$PROBLEM" != X ] || exitm "failed to detect PROBLEM"
+	[ -n "$CONTEST" ] || exitm "failed to detect CONTEST"
+	[ -n "$PROBLEM" ] || exitm "failed to detect PROBLEM"
 	m CONTEST: $CONTEST
 	m PROBLEM: $PROBLEM
 }
@@ -213,14 +213,14 @@ atcoder_do_mkdir() {
 	local mode="$2"
 	CONTEST="$1"
 	local already_in_contest_dir
-	if [ "$CONTEST" == '' ]; then
+	if [ -z "$CONTEST" ]; then
 		CONTEST="$(basename "$(pwd)")"
 		already_in_contest_dir=1
 	fi
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
 	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
-	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
+	[ -n "$TASK_SCREEN_NAMES" ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
 
 	if [ "$already_in_contest_dir" != 1 ]
 	then
@@ -301,12 +301,12 @@ atcoder_task() {
 	local CONTENT TASK_SCREEN_NAMES TASK_SCREEN_NAME
 	CONTENT="$(atcoder_http_get "/contests/${CONTEST}/submit")" || exitm "failed to get task list"
 	TASK_SCREEN_NAMES="$(atcoder_extract_task_screen_names <<< "$CONTENT")"
-	[ "X$TASK_SCREEN_NAMES" != X ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
+	[ -n "$TASK_SCREEN_NAMES" ] || exitm "SOMETHING WRONG with CONTEST ${CONTEST}: task list empty."
 	TASK_SCREEN_NAME="$(
 		grep "\<$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES" ||
 		grep "_$PROBLEM"'$' <<< "$TASK_SCREEN_NAMES"
 	)"
-	[ "X$TASK_SCREEN_NAME" != X ] || exitm "failed to determinate TASK_SCREEN_NAME"
+	[ -n "$TASK_SCREEN_NAME" ] || exitm "failed to determinate TASK_SCREEN_NAME"
 	m TASK_SCREEN_NAME: $TASK_SCREEN_NAME
 
 	case "$SUBCOMMAND" in
@@ -360,9 +360,9 @@ atcoder_task() {
 	submit)
 		local CSRF_TOKEN USER_SCREEN_NAME
 		CSRF_TOKEN="$(atcoder_extract_js_var csrfToken <<< "$CONTENT")"
-		[ "X$CSRF_TOKEN" != X ] || exitm "failed to detect csrf_token"
+		[ -n "$CSRF_TOKEN" ] || exitm "failed to detect csrf_token"
 		USER_SCREEN_NAME="$(atcoder_extract_js_var userScreenName <<< "$CONTENT")"
-		[ "X$USER_SCREEN_NAME" != X ] || exitm "login first"
+		[ -n "$USER_SCREEN_NAME" ] || exitm "login first"
 		[ -e "${SOURCEFILE}" ] || exitm "no source to submit"
 
 		m "submitting $SOURCEFILE as $LANGTITLE ..."
@@ -449,7 +449,7 @@ atcoder_edit() {
 
 atcoder_do_init() {
 	local ATCODER_LANG="$1"
-	[ "X${ATCODER_LANG}" = X ] || atcoder_do_switch "$ATCODER_LANG"
+	[ -z "${ATCODER_LANG}" ] || atcoder_do_switch "$ATCODER_LANG"
 
 	atcoder_assert_pwd
 	atcoder_assert_config
@@ -463,7 +463,7 @@ atcoder_do_switch() {
 
 	atcoder_assert_tmplroot
 
-	if [ "X${ATCODER_LANG}" = X ]
+	if [ -z "${ATCODER_LANG}" ]
 	then
 		m "usage: $0 switch <LANGUAGE>"
 		m "$(printf '%-10s %s\n' "LANGUAGE" "DESCRIPTION")"
@@ -499,7 +499,7 @@ atcoder_do_switch() {
 atcoder_do_cat_library() {
 	local LIBNAME="$1"
 	local EXT="${SOURCEFILE##*.}"
-	[ "X${EXT}" != X ] || exitm "cannot detect EXT"
+	[ -n "${EXT}" ] || exitm "cannot detect EXT"
 
 	atcoder_assert_config
 	atcoder_assert_tmplroot
@@ -507,7 +507,7 @@ atcoder_do_cat_library() {
 	[ -d "${TMPLROOT}/lib" ] || exitm "${TMPLROOT}/lib not found."
 
 	local LIBFILE
-	if [ "X${LIBNAME}" != X ]
+	if [ -n "${LIBNAME}" ]
 	then
 		LIBFILE="${TMPLROOT}/lib/${LIBNAME}.${EXT}"
 		[ -r "$LIBFILE" ] || exitm "LIBFILE $LIBFILE not found."
@@ -547,7 +547,7 @@ atcoder_do_test() {
 			m NG
 			RC=1
 		fi
-	done < <(if [ "$1" != "" ]; then echo sample/"$1".in; else find sample -name '*.in' | sort -n; fi)
+	done < <(if [ -n "$1" ]; then echo sample/"$1".in; else find sample -name '*.in' | sort -n; fi)
 	return "$RC"
 }
 
