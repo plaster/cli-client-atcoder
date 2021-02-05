@@ -5,6 +5,7 @@ COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
 VERSION='0.2-dev'
 CURLCMD=curl
+SEDCMD=sed
 invoke_curl() {
 		"$CURLCMD" -sS \
 		-A "cli-client-atcoder/$VERSION" \
@@ -73,7 +74,7 @@ atcoder_extract_js_var() {
 	local VARNAME VALUE
 	VARNAME="$1"
 	[ -n "$VARNAME" ] || die_of "INTERNAL ERROR: VARNAME MISSING"
-	sed -ne "/var $VARNAME = \"/ { s/.*var $VARNAME = \"//; s/\".*//; p; Q }" <<< "$CONTENT"
+	"$SEDCMD" -ne "/var $VARNAME = \"/ { s/.*var $VARNAME = \"//; s/\".*//; p; Q }" <<< "$CONTENT"
 }
 
 atcoder_check_logged_in() {
@@ -176,8 +177,8 @@ atcoder_do_logout() {
 
 atcoder_detect_by_dir() {
 	case "$1" in
-	CONTEST) sed -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\1@; p }' ;;
-	PROBLEM) sed -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\2@; p }' ;;
+	CONTEST) "$SEDCMD" -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\1@; p }' ;;
+	PROBLEM) "$SEDCMD" -ne '\@/[^/]\+/[^/]\+$@ { s@.*/\([^/]\+\)/\([^/]\+$\)@\2@; p }' ;;
 	*) die_of "INTERNAL ERROR: unknown: $1" ;;
 	esac
 }
@@ -198,7 +199,7 @@ atcoder_assert_pwd() {
 }
 
 atcoder_extract_task_screen_names() {
-	sed -ne '
+	"$SEDCMD" -ne '
 		/<select.*name="data.TaskScreenName">/,$ {
 			/<\/select>/Q
 			/<option/ {
@@ -239,7 +240,7 @@ atcoder_do_mkdir() {
 			TASKDIR="$TASK_SCREEN_NAME"
 			;;
 		'SHORTNAME')
-			TASKDIR="$(sed -e 's/.*_//' <<< "$TASK_SCREEN_NAME")"
+			TASKDIR="$("$SEDCMD" -e 's/.*_//' <<< "$TASK_SCREEN_NAME")"
 			;;
 		'')
 			die_of "internal error: mode missing." ;;
@@ -279,7 +280,7 @@ atcoder_do_edit() {
 
 atcoder_extract_pre() {
 	local HEADER_PAT="$1"
-	sed -ne '\@'"$HEADER_PAT"'@,$ {
+	"$SEDCMD" -ne '\@'"$HEADER_PAT"'@,$ {
 		/<pre>/,$ {
 			/<pre>/ {
 				s/.*<pre>//
@@ -633,7 +634,7 @@ show_help() {
 		;;
 	*)  die_of "internal error: unknown mode: $mode" ;;
 	esac
-	sed "${SEDARGS[@]}" < "$MAINCOMMAND"
+	"$SEDCMD" "${SEDARGS[@]}" < "$MAINCOMMAND"
 }
 
 show_rights() {
