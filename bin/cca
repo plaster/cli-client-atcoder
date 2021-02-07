@@ -3,7 +3,7 @@
 # global parameters
 COOKIE_JAR=~/.cli-client-atcoder-cookie
 URIBASE=https://atcoder.jp
-VERSION='0.3.0-dev'
+VERSION='0.3.1-dev'
 CURLCMD=
 SEDCMD=
 invoke_curl() {
@@ -493,6 +493,7 @@ atcoder_do_init() {
 
 atcoder_do_switch() {
 	local ATCODER_LANG="$1"
+	local SOURCEFILE_NEW="$2"
 
 	atcoder_assert_tmplroot
 
@@ -514,15 +515,40 @@ atcoder_do_switch() {
 		die_of "please specify LANGUAGE"
 	fi
 
-	case "$ATCODER_LANG" in
-	default)
-		[ ! -e ./.atcoder ] || rm ./.atcoder || die_of "failed to rm ./.atcoder"
-		;;
-	*)
+	local DO_CONFIG_CP=
+
+	if [ -z "${SOURCEFILE_NEW}" ]
+	then
+		case "$ATCODER_LANG" in
+		*.*)
+			SOURCEFILE_NEW="$ATCODER_LANG"
+			ATCODER_LANG="${ATCODER_LANG##*.}"
+			local EXT="${SOURCEFILE##*.}"
+			[ "$ATCODER_LANG" = "$EXT" ] || DO_CONFIG_CP=1
+			;;
+		*)
+			DO_CONFIG_CP=1
+			;;
+		esac
+	else
+		DO_CONFIG_CP=1
+	fi
+
+	case "$DO_CONFIG_CP" in
+	1)
 		checked_cp "${TMPLROOT}/config/${ATCODER_LANG}.atcoder" ./.atcoder
+		info_of "switched lang -> $ATCODER_LANG"
 		chmod u+x ./.atcoder || die_of "failed to chmod ./.atcoder"
 		;;
 	esac
+
+	[ -z "$SOURCEFILE_NEW" ] || {
+		touch ./.atcoder || die_of "cannot touch ./.atcoder"
+		chmod u+x ./.atcoder || die_of "failed to chmod ./.atcoder"
+		sed -i "\|^SOURCEFILE=|d" ./.atcoder || die_of "cannot change ./.atcoder"
+		echo "SOURCEFILE='$SOURCEFILE_NEW'" >> ./.atcoder || "cannot append to ./.atcoder"
+		info_of "switched file -> $SOURCEFILE_NEW"
+	}
 
 	# reload config
 	atcoder_load_config
@@ -724,16 +750,19 @@ mkdir)
 	atcoder_do_mkdir "$1" FULLNAME
 	;;
 init|i|gen)
-	### 引数: [template_id]
+	### 引数: [lang]
 	### タスクディレクトリ下に回答テンプレートを生成します。タスクディレクトリ下で実行してください。
 	### 例) ~/work/abc188/a$ $MAINCOMMANDNAME init
 	### 例) ~/work/abc188/b$ $MAINCOMMANDNAME init bash
 	atcoder_do_init "$@"
 	;;
 switch)
-	### 引数: <template_id>
+	### 引数: <lang>
 	### タスクディレクトリ下の回答テンプレートを別言語に切り替えます。タスクディレクトリ下で実行してください。
 	### 例) ~/work/abc188/a$ $MAINCOMMANDNAME switch bash
+	### 引数: <ファイル名>
+	### タスクディレクトリ下の回答ファイルを切り替えます。
+	### 例) ~/work/abc188/a$ $MAINCOMMANDNAME switch Main2.cc
 	atcoder_do_switch "$@"
 	;;
 edit|e)
