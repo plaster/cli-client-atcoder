@@ -53,15 +53,18 @@ mkdir
 	 タスク名の末尾がアルファベット一文字で定まらないようなコンテスト（abs等）で使います。
 
 init (または i, gen)
-	 引数: [template_id]
+	 引数: [lang]
 	 タスクディレクトリ下に回答テンプレートを生成します。タスクディレクトリ下で実行してください。
 	 例) ~/work/abc188/a$ cca init
 	 例) ~/work/abc188/b$ cca init bash
 
 switch
-	 引数: <template_id>
+	 引数: <lang>
 	 タスクディレクトリ下の回答テンプレートを別言語に切り替えます。タスクディレクトリ下で実行してください。
 	 例) ~/work/abc188/a$ cca switch bash
+	 引数: <ファイル名>
+	 タスクディレクトリ下の回答ファイルを切り替えます。
+	 例) ~/work/abc188/a$ cca switch Main2.cc
 
 edit (または e)
 	 エディタを起動して回答を編集します。タスクディレクトリ下で実行してください。
