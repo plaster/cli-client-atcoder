@@ -615,6 +615,10 @@ atcoder_do_repl() {
 	atcoder_repl
 }
 
+atcoder_do_run() {
+	atcoder_run
+}
+
 atcoder_do_submit() {
 	atcoder_task submit
 }
@@ -800,6 +804,10 @@ submit|sub|s)
 force-submit|fsub)
 	### 回答を提出します。サンプル入出力との比較は行いません。
 	atcoder_do_submit
+	;;
+run)
+	### 回答コードを起動します。入力を標準入力から与えてください。
+	atcoder_do_run
 	;;
 repl)
 	### 回答コードをロードした状態で処理系と対話します。
