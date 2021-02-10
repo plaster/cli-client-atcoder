@@ -626,7 +626,7 @@ atcoder_do_submit() {
 declare MAINCOMMAND
 
 show_help() {
-	echo "$0 <サブコマンド> [引数...] - AtCoder 提出クライアント"
+	echo "$0 [オプション] <サブコマンド> [引数...] - AtCoder 提出クライアント"
 	case "$1" in
 	'')
 		echo 'サブコマンド:'
@@ -716,6 +716,26 @@ show_version() {
 atcoder_load_config
 atcoder_detect_env
 MAINCOMMAND="$0"
+while true
+do
+	case "$1" in
+	-s|--source)
+		shift
+		SOURCEFILE="$1"
+		shift
+		;;
+	--) # end of options
+		shift
+		break
+		;;
+	-*)
+		die_of "unknown option: $1"
+		;;
+	*)
+		break
+		;;
+	esac
+done
 SUBCOMMAND="$1"
 shift
 case "$SUBCOMMAND" in
