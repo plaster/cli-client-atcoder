@@ -616,6 +616,7 @@ atcoder_do_repl() {
 }
 
 atcoder_do_run() {
+	atcoder_build </dev/null || die_of "build failed."
 	atcoder_run
 }
 
